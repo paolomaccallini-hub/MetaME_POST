@@ -195,6 +195,4 @@ If you use this pipeline, please cite:
 
 ## Acknowledgements
 
-This work is dedicated to the memory of Pierluigi Maccallini (1970–2010), computer scientist and ME/CFS patient, whose intellectual guidance made this project possible.
-
-The author thanks the DecodeME team, the Million Veteran Program, and all patients who contributed their samples to ME/CFS research.
+This work is dedicated to the memory of Pierluigi Maccallini (1977–2010), computer scientist and ME/CFS patient, whose intellectual guidance made this project possible.

@@ -1,0 +1,39 @@
+Welcome to MAGMA v1.10 (linux)
+Using flags:
+	--gene-results /new_data/users_data/celltype/728365/magma.genes.raw
+	--gene-covar /data/MAGMA/celltype/DropViz_TH_level2.txt
+	--model condition-hide=Average direction=greater
+	--out /new_data/users_data/celltype/728365/magma_celltype_DropViz_TH_level2
+
+Start time is 17:43:45, Monday 20 Apr 2026
+
+Reading file /new_data/users_data/celltype/728365/magma.genes.raw... 
+	18665 genes read from file
+Loading gene-level covariates...
+Reading file /data/MAGMA/celltype/DropViz_TH_level2.txt... 
+	detected 49 variables in file (using all)
+	found 49 valid gene covariates, for 15002 genes defined in genotype data
+Processing missing values...
+	found 3663 genes not present in all input files: removing these from analysis
+	15002 genes remaining in analysis
+Preparing variables for analysis...
+	truncating Z-scores 3 points below zero or 6 standard deviations above the mean
+	truncating covariate values more than 5 standard deviations from the mean
+	total variables available for analysis: 49 gene covariates
+
+Parsing model specifications...
+Inverting gene-gene correlation matrix...
+Performing regression analysis...
+	testing direction: one-sided, positive (sets), one-sided, positive (covar)
+	conditioning on internal variables:
+		gene size, log(gene size)
+		gene density, log(gene density)
+		inverse mac, log(inverse mac)
+	conditioning on input variables (no output):
+		Average (covar)
+	analysing individual variables
+
+	analysing single-variable models (number of models: 48)
+	writing results to file /new_data/users_data/celltype/728365/magma_celltype_DropViz_TH_level2.gsa.out
+
+End time is 17:43:53, Monday 20 Apr 2026 (elapsed: 00:00:08)

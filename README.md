@@ -38,7 +38,7 @@ The pipeline consists of two main scripts:
 | DME-1 (DecodeME) | 15,579 | 259,909 | EUR | GRCh38 |
 | MVP | 3,891 | 439,202 | EUR | GRCh38 |
 
-**Meta-analysis**: DME-1 + MVP, N_eff = 74,219, 8,859,361 variants, METAL SAMPLESIZE scheme.
+**Meta-analysis**: DME-1 + MVP, N_eff = 74,219 and 8,859,361 variants, METAL SAMPLESIZE scheme.
 
 ---
 

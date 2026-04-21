@@ -195,4 +195,4 @@ If you use this pipeline, please cite:
 
 ## Acknowledgements
 
-This work is dedicated to the memory of Pierluigi Maccallini (1977–2010), computer scientist and ME/CFS patient, whose intellectual guidance made this project possible.
+This work is dedicated to the memory of Pierluigi Maccallini (1977–2010) whose intellectual guidance made this project possible.

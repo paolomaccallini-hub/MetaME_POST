@@ -1,0 +1,24 @@
+# MEAN_SAMPLE_SIZE = 20715
+# TOTAL_GENES = 16858
+# TEST_DIRECTION = one-sided, positive (set), one-sided, positive (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_HIDDEN = Average (covar)
+VARIABLE                             TYPE  NGENES         BETA     BETA_STD           SE            P FULL_NAME
+Miscellaneous                       COVAR   16858    0.0034259    0.0072891     0.010692      0.37434 Miscellaneous
+Microglia                           COVAR   16858    -0.021534    -0.026227    0.0078186      0.99706 Microglia
+Vascular                            COVAR   16858    -0.013853    -0.017527    0.0076284       0.9653 Vascular
+Fibroblast                          COVAR   16858    -0.029719    -0.040047    0.0075223      0.99996 Fibroblast
+Astrocyte                           COVAR   16858   -0.0023791   -0.0037509    0.0072374      0.62881 Astrocyte
+Deep_layer_near_projecting          COVAR   16858   -0.0054873    -0.012714    0.0092682      0.72309 Deep_layer_near_projecting
+Deep_layer_corticothalamic_a...     COVAR   16858    0.0091866      0.02145     0.010341      0.18718 Deep_layer_corticothalamic_and_6b
+Deep_layer_intratelencephalic       COVAR   16858     0.011195     0.026452     0.010845      0.15097 Deep_layer_intratelencephalic
+Upper_layer_intratelencephal...     COVAR   16858     0.018918     0.043406     0.010641     0.037724 Upper_layer_intratelencephalic
+Eccentric_medium_spiny_neuron       COVAR   16858    0.0068154     0.016259    0.0059607      0.12645 Eccentric_medium_spiny_neuron
+Amygdala_excitatory                 COVAR   16858    0.0069269     0.020887    0.0037242     0.031455 Amygdala_excitatory
+Splatter                            COVAR   16858    0.0052589     0.010712     0.010714      0.31177 Splatter
+CGE_interneuron                     COVAR   16858   0.00092756    0.0019437      0.01171      0.46843 CGE_interneuron
+LAMP5_LHX6_and_Chandelier           COVAR   16858  -0.00028908  -0.00061933      0.01038      0.51111 LAMP5_LHX6_and_Chandelier
+MGE_interneuron                     COVAR   16858   0.00051596    0.0010895     0.011865      0.48266 MGE_interneuron
+Committed_oligodendrocyte_pr...     COVAR   16858  -0.00074243  -0.00096363    0.0084253      0.53511 Committed_oligodendrocyte_precursor
+Oligodendrocyte_precursor           COVAR   16858   0.00083128    0.0013676    0.0085071      0.46108 Oligodendrocyte_precursor
+Oligodendrocyte                     COVAR   16858   0.00099296    0.0015201    0.0071168      0.44452 Oligodendrocyte

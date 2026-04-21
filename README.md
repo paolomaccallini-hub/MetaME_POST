@@ -68,10 +68,10 @@ BiocManager::install(c(
 
 Raw summary statistics are not included in this repository due to size and access restrictions. Download them from the following sources before running the pipeline:
 
-| Cohort | Source |
-|---|---|
-| DecodeME (DME-1) | [OSF: rgqs3](https://osf.io/rgqs3/) |
-| MVP | [dbGaP: phs001672](https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs001672) |
+| Database | Symbol | Cases | Controls | Trait | Regression | Ancestry | Assembly | Reference | Summary Statistics |
+| :------- | :----- | -----:| --------:| :---- | :--------- | :------- | :------- | :-------- | :----------------- |
+| **DecodeME** | DME_1 | 15,579 | 259,909 | CFS (CCC/IOM) | Logistic | EUR | GRCh38 | [Preprint_2025](https://www.research.ed.ac.uk/en/publications/initial-findings-from-the-decodeme-genome-wide-association-study-) | [GWAS-1](https://osf.io/rgqs3/files) |
+| **Million_Veteran_Program** | MVP | 3,891 | 439,202 | PheCode_798.1 CFS | Logistic (SAIGE) | EUR | GRCh38 | [Verma_2024](https://pubmed.ncbi.nlm.nih.gov/39024449/) | [GCST90479178](https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90479001-GCST90480000/GCST90479178/) |
 
 The script will attempt to download DecodeME data automatically. MVP data requires dbGaP access and must be placed in `Data/MVP/` manually.
 

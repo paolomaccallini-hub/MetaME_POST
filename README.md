@@ -1,10 +1,19 @@
 # MetaME
 
-**MetaME** is an R-based meta-analysis pipeline for genome-wide association studies (GWAS) of myalgic encephalomyelitis/chronic fatigue syndrome (ME/CFS). It performs summary-statistic munging, weighted Z-score meta-analysis using METAL, and downstream enrichment analyses (gene-set, tissue, and cell-type) via FUMA and MAGMA, with independent replication against the Zhang et al. (2025) ME/CFS rare-variant module.
+**MetaME_POST** is the downstream analysis pipeline accompanying the paper:
 
-This repository accompanies the paper:
+> Maccallini P. *MetaME: a meta-analysis pipeline for genome-wide association
+> studies of myalgic encephalomyelitis/chronic fatigue syndrome.*
+> PLOS ONE (submitted).
 
-> Maccallini P. *MetaME: a meta-analysis pipeline for genome-wide association studies of myalgic encephalomyelitis/chronic fatigue syndrome.* PLOS ONE (submitted).
+This repository is self-contained and includes the full MetaME pipeline
+(`MetaME_main.R`, `MetaME_func.R`) configured for the DME-1 and MVP cohorts,
+as well as the ME/CFS-specific downstream analyses (`MetaME_POST.R`) and
+all FUMA configuration files used in this study. Note that `MetaME_main.R`
+and `MetaME_func.R` are general-purpose tools that support additional cohorts
+(UK Biobank Neale Lab, UK Biobank EIB, Long Covid) beyond those used in this
+paper; only the DME-1 and MVP cohorts were analysed here, as specified in
+`Meta_analyses.csv`.
 
 ---
 

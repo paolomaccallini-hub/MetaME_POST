@@ -1,0 +1,25 @@
+# MEAN_SAMPLE_SIZE = 19439
+# TOTAL_GENES = 16774
+# TEST_DIRECTION = one-sided, positive (set), one-sided, positive (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_HIDDEN = Average (covar)
+VARIABLE                             TYPE  NGENES         BETA     BETA_STD           SE            P FULL_NAME
+Splatter                            COVAR   16774    0.0051058     0.011355     0.013892      0.35661 Splatter
+CGE_interneuron                     COVAR   16774    0.0035972    0.0077669     0.011999      0.38217 CGE_interneuron
+LAMP5_LHX6_and_Chandelier           COVAR   16774    0.0053937     0.011998     0.011033      0.31247 LAMP5_LHX6_and_Chandelier
+MGE_interneuron                     COVAR   16774   4.9464e-05   0.00010599     0.012548      0.49843 MGE_interneuron
+Eccentric_medium_spiny_neuron       COVAR   16774     0.029859     0.063428     0.011753    0.0055395 Eccentric_medium_spiny_neuron
+Medium_spiny_neuron                 COVAR   16774      0.01582     0.036014      0.01183     0.090576 Medium_spiny_neuron
+Amygdala_excitatory                 COVAR   16774     0.018425     0.042595     0.012349     0.067852 Amygdala_excitatory
+Miscellaneous                       COVAR   16774     0.015886     0.032575     0.012427      0.10057 Miscellaneous
+Upper_layer_intratelencephal...     COVAR   16774     0.017905     0.042891     0.010197     0.039563 Upper_layer_intratelencephalic
+Deep_layer_intratelencephalic       COVAR   16774     0.013933     0.033304     0.011378      0.11039 Deep_layer_intratelencephalic
+Deep_layer_corticothalamic_a...     COVAR   16774     0.011819     0.028452     0.010205      0.12342 Deep_layer_corticothalamic_and_6b
+Deep_layer_near_projecting          COVAR   16774   -0.0067659    -0.016048    0.0088277      0.77829 Deep_layer_near_projecting
+Fibroblast                          COVAR   16774    -0.024307    -0.034627     0.007254       0.9996 Fibroblast
+Vascular                            COVAR   16774   -0.0098565    -0.012847    0.0074225      0.90789 Vascular
+Microglia                           COVAR   16774    -0.017239    -0.022676    0.0073869      0.99019 Microglia
+Astrocyte                           COVAR   16774   -0.0030947   -0.0054296    0.0068792      0.67359 Astrocyte
+Committed_oligodendrocyte_pr...     COVAR   16774   -0.0039756   -0.0067742    0.0072373       0.7086 Committed_oligodendrocyte_precursor
+Oligodendrocyte_precursor           COVAR   16774    0.0012141    0.0021477    0.0083296      0.44206 Oligodendrocyte_precursor
+Oligodendrocyte                     COVAR   16774    0.0017367    0.0025639    0.0073442      0.40653 Oligodendrocyte

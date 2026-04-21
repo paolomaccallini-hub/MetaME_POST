@@ -1,0 +1,23 @@
+# MEAN_SAMPLE_SIZE = 17795
+# TOTAL_GENES = 16667
+# TEST_DIRECTION = one-sided, positive (set), one-sided, positive (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_HIDDEN = Average (covar)
+VARIABLE                             TYPE  NGENES         BETA     BETA_STD           SE            P FULL_NAME
+Upper_layer_intratelencephal...     COVAR   16667     0.028256     0.063138     0.010402    0.0033039 Upper_layer_intratelencephalic
+Deep_layer_intratelencephalic       COVAR   16667     0.022327      0.05102     0.010362     0.015599 Deep_layer_intratelencephalic
+Deep_layer_corticothalamic_a...     COVAR   16667     0.018103     0.041368    0.0099517     0.034459 Deep_layer_corticothalamic_and_6b
+Miscellaneous                       COVAR   16667      0.01623     0.032139     0.010158     0.055056 Miscellaneous
+Deep_layer_near_projecting          COVAR   16667     0.003028    0.0069218    0.0088588      0.36625 Deep_layer_near_projecting
+Splatter                            COVAR   16667   -0.0043226   -0.0095105     0.007329      0.72233 Splatter
+MGE_interneuron                     COVAR   16667     0.015355     0.031016     0.011992      0.10021 MGE_interneuron
+CGE_interneuron                     COVAR   16667      0.01633     0.033227     0.011977      0.08637 CGE_interneuron
+LAMP5_LHX6_and_Chandelier           COVAR   16667     0.014004      0.02943     0.010493      0.09101 LAMP5_LHX6_and_Chandelier
+Upper_rhombic_lip                   COVAR   16667   -0.0041185    -0.011146    0.0030683      0.91023 Upper_rhombic_lip
+Astrocyte                           COVAR   16667   -0.0025881   -0.0039629    0.0076677      0.63214 Astrocyte
+Oligodendrocyte_precursor           COVAR   16667    0.0054788    0.0092208    0.0087027       0.2645 Oligodendrocyte_precursor
+Committed_oligodendrocyte_pr...     COVAR   16667     0.010937     0.017472    0.0081697     0.090337 Committed_oligodendrocyte_precursor
+Oligodendrocyte                     COVAR   16667    0.0030698    0.0044786    0.0076643      0.34438 Oligodendrocyte
+Microglia                           COVAR   16667     -0.01906    -0.023136    0.0081128      0.99059 Microglia
+Vascular                            COVAR   16667    -0.009771    -0.012521    0.0077929      0.89504 Vascular
+Fibroblast                          COVAR   16667    -0.026003    -0.036723    0.0069116      0.99992 Fibroblast

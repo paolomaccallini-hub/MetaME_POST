@@ -1,0 +1,28 @@
+# MEAN_SAMPLE_SIZE = 19972
+# TOTAL_GENES = 16809
+# TEST_DIRECTION = one-sided, positive (set), one-sided, positive (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_HIDDEN = Average (covar)
+VARIABLE                             TYPE  NGENES         BETA     BETA_STD           SE            P FULL_NAME
+Splatter                            COVAR   16809    0.0033734    0.0075109     0.010042      0.36846 Splatter
+Cerebellar_inhibitory               COVAR   16809   0.00038847   0.00097953     0.003869      0.46001 Cerebellar_inhibitory
+LAMP5_LHX6_and_Chandelier           COVAR   16809    0.0041195    0.0097679    0.0062539      0.25504 LAMP5_LHX6_and_Chandelier
+CGE_interneuron                     COVAR   16809     0.011191       0.0217     0.011168      0.15817 CGE_interneuron
+Upper_layer_intratelencephal...     COVAR   16809     0.015899     0.034132    0.0059376    0.0037104 Upper_layer_intratelencephalic
+Deep_layer_intratelencephalic       COVAR   16809    0.0089628     0.020537    0.0063348     0.078566 Deep_layer_intratelencephalic
+Amygdala_excitatory                 COVAR   16809    0.0087622     0.023551      0.00443     0.023977 Amygdala_excitatory
+Deep_layer_corticothalamic_a...     COVAR   16809   -0.0052233    -0.016042     0.003209      0.94819 Deep_layer_corticothalamic_and_6b
+Medium_spiny_neuron                 COVAR   16809    0.0092924     0.022397    0.0072729      0.10069 Medium_spiny_neuron
+Eccentric_medium_spiny_neuron       COVAR   16809     0.021065     0.048251     0.008544    0.0068472 Eccentric_medium_spiny_neuron
+Midbrain_derived_inhibitory         COVAR   16809    0.0034838    0.0076226    0.0075495      0.32224 Midbrain_derived_inhibitory
+MGE_interneuron                     COVAR   16809    0.0040168    0.0083088     0.008988      0.32747 MGE_interneuron
+Upper_rhombic_lip                   COVAR   16809    -0.008628    -0.010466     0.010238       0.8003 Upper_rhombic_lip
+Committed_oligodendrocyte_pr...     COVAR   16809    0.0068885    0.0064393     0.012735      0.29429 Committed_oligodendrocyte_precursor
+Oligodendrocyte_precursor           COVAR   16809     0.003529    0.0053544    0.0091031      0.34914 Oligodendrocyte_precursor
+Oligodendrocyte                     COVAR   16809    0.0031581    0.0043165    0.0075657      0.33819 Oligodendrocyte
+Bergmann_glia                       COVAR   16809   -0.0037676   -0.0096388    0.0030511      0.89155 Bergmann_glia
+Astrocyte                           COVAR   16809   -0.0023542   -0.0034077    0.0078673      0.61762 Astrocyte
+Fibroblast                          COVAR   16809    -0.031381    -0.039465    0.0081838      0.99994 Fibroblast
+Vascular                            COVAR   16809     -0.01921    -0.021395    0.0090918      0.98269 Vascular
+Miscellaneous                       COVAR   16809    -0.011321    -0.011101    0.0089801      0.89627 Miscellaneous
+Microglia                           COVAR   16809    -0.017999    -0.021791    0.0077336      0.99002 Microglia

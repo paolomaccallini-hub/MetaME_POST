@@ -1,0 +1,28 @@
+# MEAN_SAMPLE_SIZE = 19424
+# TOTAL_GENES = 16773
+# TEST_DIRECTION = one-sided, positive (set), one-sided, positive (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_HIDDEN = Average (covar)
+VARIABLE                             TYPE  NGENES         BETA     BETA_STD           SE            P FULL_NAME
+Upper_layer_intratelencephal...     COVAR   16773    0.0041577    0.0078867    0.0064929      0.26098 Upper_layer_intratelencephalic
+Hippocampal_CA1_3                   COVAR   16773   0.00019009   0.00046979    0.0070799      0.48929 Hippocampal_CA1_3
+Splatter                            COVAR   16773   -0.0029162   -0.0058934      0.01279      0.59018 Splatter
+Miscellaneous                       COVAR   16773    0.0042774    0.0063913     0.011158      0.35074 Miscellaneous
+Deep_layer_corticothalamic_a...     COVAR   16773      0.01122     0.025369    0.0094021      0.11638 Deep_layer_corticothalamic_and_6b
+Amygdala_excitatory                 COVAR   16773     0.017677     0.037965     0.011382     0.060218 Amygdala_excitatory
+Deep_layer_intratelencephalic       COVAR   16773      0.01263     0.026307     0.012047      0.14725 Deep_layer_intratelencephalic
+Eccentric_medium_spiny_neuron       COVAR   16773     0.022385     0.045979     0.011633     0.027168 Eccentric_medium_spiny_neuron
+Medium_spiny_neuron                 COVAR   16773     0.018617     0.039196     0.010576     0.039188 Medium_spiny_neuron
+Midbrain_derived_inhibitory         COVAR   16773    0.0027419    0.0067936    0.0041629      0.25506 Midbrain_derived_inhibitory
+LAMP5_LHX6_and_Chandelier           COVAR   16773     0.012316     0.024135     0.011556      0.14328 LAMP5_LHX6_and_Chandelier
+MGE_interneuron                     COVAR   16773    0.0030234    0.0062442     0.012331      0.40316 MGE_interneuron
+CGE_interneuron                     COVAR   16773    0.0062053     0.011636     0.013024      0.31688 CGE_interneuron
+Upper_rhombic_lip                   COVAR   16773   -0.0041094   -0.0054613    0.0063419      0.74149 Upper_rhombic_lip
+Committed_oligodendrocyte_pr...     COVAR   16773     0.012551     0.017193     0.009887      0.10214 Committed_oligodendrocyte_precursor
+Oligodendrocyte_precursor           COVAR   16773   0.00022083   0.00035377    0.0093104      0.49054 Oligodendrocyte_precursor
+Oligodendrocyte                     COVAR   16773    0.0014703    0.0019245    0.0083595      0.43019 Oligodendrocyte
+Ependymal                           COVAR   16773   -0.0045693   -0.0084744    0.0057137      0.78806 Ependymal
+Astrocyte                           COVAR   16773   -0.0037085   -0.0059965    0.0076816      0.68537 Astrocyte
+Fibroblast                          COVAR   16773    -0.026803    -0.034296    0.0082644      0.99941 Fibroblast
+Vascular                            COVAR   16773    -0.024312    -0.031686    0.0080295      0.99877 Vascular
+Microglia                           COVAR   16773    -0.016898    -0.020377    0.0080147      0.98249 Microglia

@@ -98,7 +98,7 @@ METAL:
 source("MetaME_main.R")
 ```
 
-4. Submit FUMA jobs using the config files in `FUMA/configs/`. Full dataset identifiers and FUMA job parameters are documented there.
+4. Submit FUMA jobs using the config files in `FUMA/configs/`. Full dataset identifiers and FUMA job parameters are documented there. FUMA output is available in this repository.
 
 5. Once FUMA results are available, place them in `FUMA/results/` and run the post-processing script:
 ```r

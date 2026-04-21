@@ -1,0 +1,30 @@
+# TOTAL_GENES = 15078
+# TEST_DIRECTION = one-sided, positive (set), one-sided, positive (covar)
+# CONDITIONED_INTERNAL = gene size, gene density, inverse mac, log(gene size), log(gene density), log(inverse mac)
+# CONDITIONED_HIDDEN = Average (covar)
+VARIABLE                             TYPE  NGENES         BETA     BETA_STD           SE            P FULL_NAME
+Neuron_Slc17a7_Gabra6.1_1           COVAR   15078   -0.0026989   -0.0076014    0.0060946      0.67105 Neuron_Slc17a7_Gabra6.1_1
+Endothelial_Stalk_Flt1_Mgp.1...     COVAR   15078    0.0093968     0.027886    0.0040359    0.0099545 Endothelial_Stalk_Flt1_Mgp.10_1
+Endothelial_Stalk_Flt1_Car4....     COVAR   15078    0.0064336     0.019005    0.0041238     0.059379 Endothelial_Stalk_Flt1_Car4.10_2
+Endothelial_Stalk_Flt1_Lrg1....     COVAR   15078    0.0029156    0.0086688    0.0040905      0.23799 Endothelial_Stalk_Flt1_Lrg1.10_3
+Endothelial_Tip_Dcn_Nnat.11_1       COVAR   15078    0.0006878    0.0019855    0.0037023      0.42631 Endothelial_Tip_Dcn_Nnat.11_1
+Endothelial_Tip_Dcn_Apod.11_2       COVAR   15078    0.0014683    0.0043432    0.0033362      0.32993 Endothelial_Tip_Dcn_Apod.11_2
+Mural_Acta2Rgs5_Acta2.11_3          COVAR   15078   -0.0042198    -0.012798    0.0035162      0.88494 Mural_Acta2Rgs5_Acta2.11_3
+Mural_Acta2Rgs5_Kcnj8.11_4          COVAR   15078   -0.0010551   -0.0033379    0.0028924      0.64236 Mural_Acta2Rgs5_Kcnj8.11_4
+Mural_Acta2Rgs5_Rgs5.11_5           COVAR   15078   -0.0030858   -0.0096527    0.0028921      0.85699 Mural_Acta2Rgs5_Rgs5.11_5
+Neuron_Gad1Gad2_Pcp2.2_1            COVAR   15078    -0.002343   -0.0066688      0.00475      0.68908 Neuron_Gad1Gad2_Pcp2.2_1
+Neuron_Gad1Gad2_Pvalb-Nefh.3...     COVAR   15078   -0.0037285    -0.010569    0.0051189       0.7668 Neuron_Gad1Gad2_Pvalb-Nefh.3_1
+Neuron_Gad1Gad2_Pvalb-Rab3b....     COVAR   15078   -0.0049615    -0.014427    0.0049809      0.84039 Neuron_Gad1Gad2_Pvalb-Rab3b.3_2
+Neuron_Gad1Gad2_Pvalb-Cadm1....     COVAR   15078   -0.0058131    -0.017383    0.0043592      0.90881 Neuron_Gad1Gad2_Pvalb-Cadm1.3_3
+Neuron_Gad1Gad2_Pvalb-Chrm2....     COVAR   15078   -0.0039806    -0.011832    0.0043244      0.82134 Neuron_Gad1Gad2_Pvalb-Chrm2.3_4
+Neuron_Slc17a6_Sln.4_1              COVAR   15078    0.0012702    0.0037344    0.0047328      0.39421 Neuron_Slc17a6_Sln.4_1
+Neuron_Gad1Gad2_Lgi2.4_2            COVAR   15078   -0.0035595    -0.010386    0.0044257      0.78937 Neuron_Gad1Gad2_Lgi2.4_2
+Neuron_Slc17a6_Nrgn.4_3             COVAR   15078   0.00077515    0.0024031    0.0035723      0.41411 Neuron_Slc17a6_Nrgn.4_3
+Microglia_C1qb_Mrc1-Tmem119....     COVAR   15078    0.0028965    0.0089354    0.0031077      0.17567 Microglia_C1qb_Mrc1-Tmem119.5_1
+Oligodendroyte_Trf_Il33.6_1         COVAR   15078   -0.0010157   -0.0028038    0.0051963      0.57748 Oligodendroyte_Trf_Il33.6_1
+Oligodendrocyte_Trf_Klk6.6_2        COVAR   15078    0.0028694    0.0083291    0.0039129      0.23169 Oligodendrocyte_Trf_Klk6.6_2
+Polydendrocyte_Tnr_Tnr.6_3          COVAR   15078   9.4925e-06   2.9253e-05    0.0031494       0.4988 Polydendrocyte_Tnr_Tnr.6_3
+Astrocyte_Gja_Slc1a3.7_1            COVAR   15078   -0.0016195   -0.0044145    0.0056035      0.61371 Astrocyte_Gja_Slc1a3.7_1
+Gja1_Gfap.8_1                       COVAR   15078    0.0019244    0.0059825    0.0031461      0.27038 Gja1_Gfap.8_1
+Gja1_Htra1.8_2                      COVAR   15078   -0.0047521    -0.013489    0.0046833      0.84487 Gja1_Htra1.8_2
+Choroid_Plexus_Ttr.9_1              COVAR   15078    0.0039822     0.011032    0.0039863      0.15891 Choroid_Plexus_Ttr.9_1

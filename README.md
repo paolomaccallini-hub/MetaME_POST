@@ -84,7 +84,19 @@ Raw summary statistics are not included in this repository due to size and acces
 
 The script will attempt to download DecodeME data automatically. MVP data requires dbGaP access and must be placed in `Data/MVP/` manually.
 
-The FUMA preprocessed scRNA-seq archive (`preprocessed_scrnaseq.tar.gz`) must be downloaded from the [FUMA website](https://fuma.ctglab.nl/tutorial#celltype) and placed in `Data/`.
+The FUMA preprocessed scRNA-seq archive (`preprocessed_scrnaseq.tar.gz`) must be
+downloaded manually from the FUMA website and placed in `Data/`. To obtain it:
+
+1. Register for a free account at [https://fuma.ctglab.nl](https://fuma.ctglab.nl)
+2. Log in and navigate to **Cell type** → **About**
+3. Download the file **preprocessed_scrnaseq.tar.gz** (approximately 4 GB)
+4. Place it at `Data/preprocessed_scrnaseq.tar.gz`
+
+This file contains the preprocessed single-nucleus RNA-seq expression matrices
+from the Siletti et al. (2023), Seeker et al. (2023), and DropViz (Saunders et al.
+2018) atlases, preprocessed by the FUMA team for use with the MAGMA cell-type
+analysis pipeline. The `MetaME_POST.R` script reads this archive directly without
+unpacking it, using the `archive` R package.
 
 ---
 
@@ -92,7 +104,7 @@ The FUMA preprocessed scRNA-seq archive (`preprocessed_scrnaseq.tar.gz`) must be
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/<your-username>/MetaME.git
+git clone https://github.com/<your-username>/MetaME_POST.git
 cd MetaME
 ```
 

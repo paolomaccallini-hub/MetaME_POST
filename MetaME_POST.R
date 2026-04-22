@@ -1072,7 +1072,7 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 # Write a table with only significant results
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-write.table(DME_1_MVP,"Table_3.csv",sep=",",row.names=F,quote=F)
+write.table(DME_1_MVP,"Table_Gene_Set.csv",sep=",",row.names=F,quote=F)
 #
 #-------------------------------------------------------------------------------
 # Supplementary table: Tissue analysis
@@ -1151,7 +1151,7 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 # Write a table with only significant results
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-write.table(DME_1_MVP,"Table_4.csv",sep=",",row.names=F,quote=F)
+write.table(DME_1_MVP,"Table_Tissue.csv",sep=",",row.names=F,quote=F)
 #
 #-------------------------------------------------------------------------------
 # Supplementary table: DropViz L2
@@ -1245,7 +1245,7 @@ step3<-subset.data.frame(step3,step3==1)
 index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type)
 DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
 DME_1_MVP<-DME_1_MVP[index,]
-write.table(DME_1_MVP,"Table_5.csv",sep=",",row.names=F,quote=F)
+write.table(DME_1_MVP,"Table_DropViz.csv",sep=",",row.names=F,quote=F)
 #
 #-------------------------------------------------------------------------------
 # Supplementary table: Siletti_Seeker L2
@@ -1339,8 +1339,8 @@ step3<-subset.data.frame(step3,step3==1)
 index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type)
 DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
 DME_1_MVP[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(DME_1_MVP), 1)]  
-write.table(DME_1_MVP,"Table_8.csv",sep=",",row.names=F,quote=F)
+write.table(DME_1_MVP,"Table_Siletti_Seeker_BH.csv",sep=",",row.names=F,quote=F)
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
 DME_1_MVP[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(DME_1_MVP), 1)]  
-write.table(DME_1_MVP,"Table_7.csv",sep=",",row.names=F,quote=F)
+write.table(DME_1_MVP,"Table_Siletti_Seeker_Bon.csv",sep=",",row.names=F,quote=F)

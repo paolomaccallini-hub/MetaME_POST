@@ -1,10 +1,8 @@
 # MetaME
 
-**MetaME_POST** is the downstream analysis pipeline accompanying the paper:
+**MetaME_POST** is the analysis pipeline accompanying the paper:
 
-> Maccallini P. *MetaME: a meta-analysis pipeline for genome-wide association
-> studies of myalgic encephalomyelitis/chronic fatigue syndrome.*
-> PLOS ONE (submitted).
+> xxx
 
 This repository is self-contained and includes the full MetaME pipeline
 (`MetaME_main.R`, `MetaME_func.R`) configured for the DME-1 and MVP cohorts,
@@ -189,7 +187,7 @@ MIT License. See `LICENSE` for details.
 
 If you use this pipeline, please cite:
 
-> Maccallini P. *MetaME: a meta-analysis pipeline for genome-wide association studies of myalgic encephalomyelitis/chronic fatigue syndrome.* PLOS ONE (submitted).
+> Maccallini P. xxx
 
 ---
 

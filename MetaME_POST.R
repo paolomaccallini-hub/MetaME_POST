@@ -1242,7 +1242,8 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
 step3<-fread("FUMA/DME_1_MVP/DropViz_L2/step1_2_summary.txt")
 step3<-subset.data.frame(step3,step3==1)
-index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type)
+index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
+DNE_1_MVP<-DME_1_MVP[index,]
 DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
 DME_1_MVP<-DME_1_MVP[index,]
 write.table(DME_1_MVP,"Table_DropViz.csv",sep=",",row.names=F,quote=F)
@@ -1336,7 +1337,8 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
 step3<-fread("FUMA/DME_1_MVP/Siletti_Seeker_L2/step1_2_summary.txt")
 step3<-subset.data.frame(step3,step3==1)
-index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type)
+index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
+DNE_1_MVP<-DME_1_MVP[index,]
 DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
 DME_1_MVP[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(DME_1_MVP), 1)]  
 write.table(DME_1_MVP,"Table_Siletti_Seeker_BH.csv",sep=",",row.names=F,quote=F)

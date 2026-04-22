@@ -726,7 +726,7 @@ readme <- data.frame(
     "-log10(P) of the lead SNP in MVP",
     "",
     #---------------------------------------------------------------------------
-    "MAGMA competitive gene-set enrichment analysis (MSigDB 2023.1.Hs). Only gene sets nominally significant in DME_1_MVP.",
+    "MAGMA competitive gene-set enrichment analysis (MSigDB 2023.1.Hs).",
     #---------------------------------------------------------------------------
     "Full gene set name from MSigDB 2023.1.Hs",
     "Number of genes in the gene set",
@@ -839,7 +839,7 @@ readme <- data.frame(
 #
 # Write to Excel
 #
-wb_name<-"Supplemetary_Tables"
+wb_name<-"S1_File"
 wb<-createWorkbook()
 sheet_name<-"README" # name the sheet
 #
@@ -909,7 +909,7 @@ myRL$IndSigSNPs<-myriskloci$IndSigSNPs
 #
 # Write to Excel
 #
-wb_name<-"Supplemetary_Tables"
+wb_name<-"S1_File"
 wb<-loadWorkbook(paste0(wb_name,".xlsx"))
 myresult<-myRL
 sheet_name<-"S1 Risk Loci Meta" # name the sheet

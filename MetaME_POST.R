@@ -172,51 +172,83 @@ ora_fuma<-function(my_genes_ensembl,background,msigdb) {
   return(results)
 }
 #
-# This function reads and edit cell type datasets
+# This function reads and edit cell type datasets.
+# It derives SEGs for each cell type using top decile expression proprotion
+# as described in: https://www.nature.com/articles/s41467-024-55611-1
+# in Eq.1 and 2
+# 
 #
-make_celltype_genesets<-function(archive_path,file_name,lfc_threshold=1,top_quantile=0.9) {
+make_celltype_genesets<-function(archive_path,file_name,top_quantile=0.9,log2fc_cutoff=1) {
   #
-  # Read dataset file
+  # Read dataset
   #
   con<-archive_read(archive_path, file = file_name)
-  raw_text<-paste(readLines(con), collapse = "\n")
+  dt<-fread(text = paste(readLines(con), collapse = "\n"))
   close(con)
-  dt<-fread(input = raw_text, header = TRUE)
   #
   # Write on screen what you are doing 
   #
   print(paste("Working on",file_name))
   #
-  # First column is gene ID, last column is Average
+  # Retrieve cell types
   #
   gene_col<-names(dt)[1]
-  avg_col<-"Average"
-  cell_types<-setdiff(names(dt), c(gene_col, avg_col))
+  cell_types<-setdiff(names(dt),c(gene_col, "Average"))
   #
-  # Rename gene column for consistency
+  # Convert to linear scale from log scale
+  # 
+  mat_lin<-as.matrix(dt[, ..cell_types])
+  mat_lin<-2^mat_lin - 1 
+  mat_lin[mat_lin<0]<-0 # Handle potential precision noise
   #
-  setnames(dt, gene_col, "ensembl_id")
+  # Calculate expression proportions
+  # 
+  row_sums<-rowSums(mat_lin)
+  prop_mat<-mat_lin/ifelse(row_sums==0,1,row_sums) # avoid division by zero
   #
-  # For each cell type: compute LFC vs average, apply thresholds
-  #
-  mylist<-list()
+  mylist<-list() # results here, one element per cell type
   counter<-1
-  for (j in 2:(ncol(dt)-1)) {
-    tq<-quantile(dt[[j]],top_quantile,na.rm=T)
-    for (i in 1:nrow(dt)) {
-      if (dt[[j]][i]>tq) {
-        if (dt[[j]][i]-dt[[avg_col]][i]>lfc_threshold) {
-          mylist[[counter]]<-data.table(gs_name=colnames(dt)[j],ensembl_id=dt$ensembl_id[i])
-          counter<-counter+1
-        }
-      }
+  for (j in seq_along(cell_types)) {
+    #
+    scores<-prop_mat[, j]
+    threshold<-quantile(scores,top_quantile,na.rm=TRUE)
+    lfc_scores<-dt[[cell_types[j]]]-dt$Average
+    idx<-which(scores>threshold&lfc_scores>log2fc_cutoff) 
+    #
+    if (length(idx)>0) {
+      mylist[[counter]]<-data.table(
+        gs_name = cell_types[j],
+        ensembl_id = dt[[gene_col]][idx],
+        specificity_score = scores[idx],
+        log2_fc = lfc_scores[idx]
+      )
+      counter<-counter+1
     }
   }
-  myresult<-rbindlist(mylist)
   #
-  # Return result
-  #
-  return(myresult)
+  return(rbindlist(mylist))
+}
+#
+# This function add annotations to DrpViz results
+#
+Annot_DV<-function(dt) {
+  for (i in 1:nrow(dt)) {
+    tissue<-gsub("DropViz_","",dt$Dataset[i])
+    tissue<-gsub("_level2","",tissue)
+    full_name<-gsub("_",".",dt$Cell_type[i])
+    full_name<-gsub("\\.[^.]+\\.[^.]+$","",full_name)
+    index<-which(DropViz_anno$tissue==tissue&DropViz_anno$full_name==full_name)
+    if (length(index)>0) {
+      dt$class_marker[i]<-DropViz_anno$class_marker[index]
+      dt$type_marker[i]<-DropViz_anno$type_marker[index]
+      dt$common_name[i]<-DropViz_anno$common_name[index]
+    } else {
+      dt$class_marker[i]<-NA
+      dt$type_marker[i]<-NA
+      dt$common_name[i]<-NA
+    }
+  }
+  return(dt)
 }
 #
 #-------------------------------------------------------------------------------
@@ -260,6 +292,7 @@ if(!file.exists(file_path)) {
     terminate_on = c(404, 403) # don't retry on these errors
   )
 }  
+DropViz_anno<-readRDS("Data/DropViz_anno.RDS")
 #
 #-----------------------------------------------------------------------------
 # Edit scRNA-seq archive (download from FUMA webstite, place it in Data)
@@ -282,9 +315,9 @@ file_list_filtered<-file_list[
 for (i in 1:length(file_list_filtered)){
   archive_path<-"Data/preprocessed_scrnaseq.tar.gz"
   file_name<-file_list_filtered[i]
-  lfc_threshold<-1 # threshold for log2(Exp+1) - log2(mean(Exp)+1)
-  top_quantile<-0.90 # threshold for log2(exp+1) within cell type
-  results<-make_celltype_genesets(archive_path,file_name,lfc_threshold,top_quantile)
+  top_quantile<-0.90 
+  log2fc_cutoff<-1
+  results<-make_celltype_genesets(archive_path,file_name,top_quantile,log2fc_cutoff)
   file_name<-gsub("celltype/","",file_name)
   write.table(results,paste0("Data/Cell_type/",file_name),sep=",",row.names=F)
 }
@@ -347,18 +380,7 @@ my_universe_ensembl<-unique(mapped$ENSEMBL[!is.na(mapped$ENSEMBL)])
 # Gene-set enrichment analysis
 #-------------------------------------------------------------------------------
 #
-discovery_path<-"DME_1_MVP"
 replication_path<-"Zhang"
-#
-# Read GSEA for main metaGWAS 
-#
-Discovery<-read_magma_gsa(paste0("FUMA/",discovery_path,"/MAGMA/magma.gsa.out"))
-#
-# Write a file
-#
-write.table(Discovery,paste0("Replication/",discovery_path,"_to_Replication_GSEA.csv"),
-            sep=",",row.names=F)
-Discovery<-subset.data.frame(Discovery,P_bon<=0.05)
 #
 # Perform ORA on Zhang module
 #
@@ -368,47 +390,11 @@ Replication<-ora_fuma(my_genes_ensembl,background,msigdb)
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_GSEA.csv"),
             sep=",",row.names=F)
 #
-# Keep only nominally significant
-#
-Replication<-subset.data.frame(Replication,P<=0.05)
-#
-# Select the same items in replication cohort and apply Bonferroni for replication
-#
-if ((nrow(Discovery)>0)&(nrow(Replication)>0)) {
-  Replication<-subset.data.frame(Replication,FULL_NAME%in%Discovery$FULL_NAME)
-  if (nrow(Replication)>0) {
-    Replication$P_bon_rep<-Replication$P*nrow(Discovery)
-    for (i in 1:nrow(Replication)) {
-      if (Replication$P_bon_rep[i]>1) Replication$P_bon_rep[i]<-1
-    }
-    #
-    # Build output
-    #
-    Output<-merge(Discovery,Replication,by=c("FULL_NAME"),all=T)
-    #
-    # Save results
-    #
-    write.table(Output,paste0("Replication/",discovery_path,"_replication_",
-                              replication_path,"_GSEA.csv"),sep=",",row.names=F,quote=F)
-  }
-}
-#
 #-------------------------------------------------------------------------------
 # Tissue enrichment analysis
 #-------------------------------------------------------------------------------
 #
-discovery_path<-"DME_1_MVP"
 replication_path<-"Zhang"
-#
-# Read GSEA for main metaGWAS 
-#
-Discovery<-read_magma_tissue(paste0("FUMA/",discovery_path,"/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out"))
-#
-# Keep only significant (BH) and write a file
-#
-write.table(Discovery,paste0("Replication/",discovery_path,"_to_Replication_Tissue.csv"),
-            sep=",",row.names = F)
-Discovery<-subset.data.frame(Discovery,P_bon<=0.05)
 #
 # Perform ORA on Zhang module
 #
@@ -418,31 +404,6 @@ Replication<-ora_fuma(my_genes_ensembl,background,GTExv8)
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_Tissue.csv"),
             sep=",",row.names=F)
 #
-# Keep only nominally significant
-#
-Replication<-subset.data.frame(Replication,P<=0.05)
-#
-# Select the same items in replication cohort and apply Bonferroni for replication
-#
-if ((nrow(Discovery)>0)&(nrow(Replication)>0)) {
-  Replication<-subset.data.frame(Replication,FULL_NAME%in%Discovery$FULL_NAME)
-  if (nrow(Replication)>0) {
-    Replication$P_bon_rep<-Replication$P*nrow(Discovery)
-    for (i in 1:nrow(Replication)) {
-      if (Replication$P_bon_rep[i]>1) Replication$P_bon_rep[i]<-1
-    }
-    #
-    # Build output
-    #
-    Output<-merge(Discovery,Replication,by=c("FULL_NAME"),all=T)
-    #
-    # Save results
-    #
-    write.table(Output,paste0("Replication/",discovery_path,"_replication_",
-                              replication_path,"_Tissue.csv"),sep=",",row.names=F,quote=F)
-  }
-}
-#
 #-------------------------------------------------------------------------------
 # DropViz cell type analysis
 #-------------------------------------------------------------------------------
@@ -450,12 +411,10 @@ if ((nrow(Discovery)>0)&(nrow(Replication)>0)) {
 discovery_path<-"DME_1_MVP"
 replication_path<-"Zhang"
 #
-# Read GSEA for main metaGWAS 
+# Read Discovery 
 #
 Discovery<-read_magma_cell("FUMA/DME_1_MVP/DropViz_L2/magma_celltype_step1.txt")
 Discovery<-unique(Discovery)
-write.table(Discovery,paste0("Replication/",discovery_path,"_to_Replication_DropViz_L2.csv"),
-            sep=",",row.names = F)
 #
 # Perform ORA on Zhang module
 #
@@ -483,41 +442,8 @@ Replication[, P_bh := p.adjust(P, method = "BH")]
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_DropViz_L2.csv"),
             sep=",",row.names=F)
 #
-# Keep only nominally significant
-#
-Replication<-subset.data.frame(Replication,P<=0.05)
-#
-# Keep only significant from step 3
-#
-Discovery<-read_magma_cell("FUMA/DME_1_MVP/DropViz_L2/step1_2_summary.txt")
-Discovery<-subset.data.frame(Discovery,step3==1)
-#
-# Select the same items in replication cohort and apply Bonferroni for replication
-#
-if ((nrow(Discovery)>0)&(nrow(Replication)>0)) {
-  Discovery$key<-paste(Discovery$Dataset,Discovery$Cell_type,sep="||||")
-  Replication$key<-paste(Replication$Dataset,Replication$Cell_type,sep="||||")
-  index<-which(Replication$key %in% Discovery$key)
-  Replication<-Replication[index,]
-  if (nrow(Replication)>0) {
-    Replication$P_bon_rep<-Replication$P*nrow(Discovery)
-    for (i in 1:nrow(Replication)) {
-      if (Replication$P_bon_rep[i]>1) Replication$P_bon_rep[i]<-1
-    }
-    #
-    # Build output
-    #
-    Output<-merge(Discovery,Replication,by=c("Dataset","Cell_type"),all=T)
-    #
-    # Save results
-    #
-    write.table(Output,paste0("Replication/",discovery_path,"_replication_",
-                              replication_path,"_DropViz_L2.csv"),sep=",",row.names=F,quote=F)
-  }
-}
-#
 #-------------------------------------------------------------------------------
-# Siletti-Seeker cell type analysis
+# Siletti-Seeker cell type analysis with Bonferroni correction
 # Note: FUMA v1.8.3 produces a duplicate entry for
 # 16_Siletti_CerebralCortex.IFG.A44-A45_Human_2022_level2
 # in the dataset list. The duplicate is present in the output
@@ -529,12 +455,10 @@ if ((nrow(Discovery)>0)&(nrow(Replication)>0)) {
 discovery_path<-"DME_1_MVP"
 replication_path<-"Zhang"
 #
-# Read GSEA for main metaGWAS 
+# Read Discovery
 #
 Discovery<-read_magma_cell("FUMA/DME_1_MVP/Siletti_Seeker_L2/magma_celltype_step1.txt")
 Discovery<-unique(Discovery) # I found duplicates
-write.table(Discovery,paste0("Replication/",discovery_path,"_to_Replication_Siletti_Seeker_L2.csv"),
-            sep=",",row.names=F)
 #
 # Perform ORA on Zhang module
 #
@@ -562,69 +486,8 @@ Replication[, P_bh := p.adjust(P, method = "BH")]
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_Siletti_Seeker_L2.csv"),
             sep=",",row.names=F)
 #
-# Keep only nominally significant
-#
-Replication<-subset.data.frame(Replication,P<=0.05)
-#
-# Keep only significant (Bonferroni) and write a file
-#
-Discovery<-subset.data.frame(Discovery,P_bh<=0.05)
-#
-# Select the same items in replication cohort and apply Bonferroni for replication
-#
-if ((nrow(Discovery)>0)&(nrow(Replication)>0)) {
-  Discovery$key <- paste(Discovery$Dataset, Discovery$Cell_type,sep="||||")
-  Replication$key <- paste(Replication$Dataset, Replication$Cell_type,sep="||||")
-  index<-which(Replication$key %in% Discovery$key)
-  Replication<-Replication[index,]
-  if (nrow(Replication)>0) {
-    Replication$P_bon_rep<-Replication$P*nrow(Discovery)
-    for (i in 1:nrow(Replication)) {
-      if (Replication$P_bon_rep[i]>1) Replication$P_bon_rep[i]<-1
-    }
-    #
-    # Build output
-    #
-    Output<-merge(Discovery,Replication,by=c("Dataset","Cell_type"),all=T)
-    #
-    # Save results
-    #
-    write.table(Output,paste0("Replication/",discovery_path,"_replication_",
-                              replication_path,"_Siletti_Seeker_L2.csv"),sep=",",row.names=F,quote=F)
-  }
-}
-#
-# Keep only significant (BH) and independent
-#
-Discovery<-read_magma_cell("FUMA/DME_1_MVP/Siletti_Seeker_L2/step1_2_summary.txt")
-Discovery<-subset.data.frame(Discovery,step3==1)
-#
-# Select the same items in replication cohort and apply Bonferroni for replication
-#
-if ((nrow(Discovery)>0)&(nrow(Replication)>0)) {
-  Discovery$key <- paste(Discovery$Dataset, Discovery$Cell_type,sep="||||")
-  Replication$key <- paste(Replication$Dataset, Replication$Cell_type,sep="||||")
-  index<-which(Replication$key %in% Discovery$key)
-  Replication<-Replication[index,]
-  if (nrow(Replication)>0) {
-    Replication$P_bon_rep<-Replication$P*nrow(Discovery)
-    for (i in 1:nrow(Replication)) {
-      if (Replication$P_bon_rep[i]>1) Replication$P_bon_rep[i]<-1
-    }
-    #
-    # Build output
-    #
-    Output<-merge(Discovery,Replication,by=c("Dataset","Cell_type"),all=T)
-    #
-    # Save results
-    #
-    write.table(Output,paste0("Replication/",discovery_path,"_replication_",
-                              replication_path,"_Siletti_Seeker_L2_BH.csv"),sep=",",row.names=F,quote=F)
-  }
-}
-#
 #-------------------------------------------------------------------------------
-# Supplementary material
+# Output and Supplementary material
 #-------------------------------------------------------------------------------
 #
 #-------------------------------------------------------------------------------
@@ -995,86 +858,6 @@ freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
 #-------------------------------------------------------------------------------
-# Supplementary table: Gene Set analyses
-#-------------------------------------------------------------------------------
-#
-DME_1_MVP<-read_magma_gsa("FUMA/DME_1_MVP/MAGMA/magma.gsa.out")
-DME_1<-read_magma_gsa("FUMA/DME_1/MAGMA/magma.gsa.out")
-MVP<-read_magma_gsa("FUMA/MVP/MAGMA/magma.gsa.out")
-Zhang<-fread("Replication/Zhang_to_Replication_GSEA.csv")
-#
-# Are there duplicated lines?
-#
-DME_1_MVP<-unique(DME_1_MVP)
-DME_1<-unique(DME_1)
-MVP<-unique(MVP)
-Zhang<-unique(Zhang)
-#
-N<-nrow(DME_1_MVP)
-#
-for (i in 1:nrow(DME_1_MVP)) {
-  index<-which(DME_1$FULL_NAME==DME_1_MVP$FULL_NAME[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_DME_1[i]<-DME_1$BETA[index]
-    DME_1_MVP$SE_DME_1[i]<-DME_1$SE[index]
-    DME_1_MVP$P_DME_1[i]<-DME_1$P[index]
-    DME_1_MVP$P_bon_DME_1[i]<-DME_1$P_bon[index]
-    DME_1_MVP$P_bh_DME_1[i]<-DME_1$P_bh[index]  
-  }
-  #
-  index<-which(MVP$FULL_NAME==DME_1_MVP$FULL_NAME[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_MVP[i]<-MVP$BETA[index]
-    DME_1_MVP$SE_MVP[i]<-MVP$SE[index]
-    DME_1_MVP$P_MVP[i]<-MVP$P[index]
-    DME_1_MVP$P_bon_MVP[i]<-MVP$P_bon[index]
-    DME_1_MVP$P_bh_MVP[i]<-MVP$P_bh[index]
-  }
-  #
-  index<-which(Zhang$FULL_NAME==DME_1_MVP$FULL_NAME[i])
-  if (length(index)==1) {
-    DME_1_MVP$P_Zhang[i]<-Zhang$P[index]
-    DME_1_MVP$P_bon_Zhang[i]<-Zhang$P_bon[index]
-    DME_1_MVP$P_bh_Zhang[i]<-Zhang$P_bh[index]
-    DME_1_MVP$n_gene_set_Zhang[i]<-Zhang$n_genes_set[index]
-    DME_1_MVP$n_overlap_Zhang[i]<-Zhang$n_overlap[index]
-    DME_1_MVP$genes_Zhang[i]<-Zhang$genes[index]  
-  }
-}
-#
-DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE",
-                                                "P","P_bon","P_bh",
-                                                "BETA_DME_1","SE_DME_1",
-                                                "P_DME_1","P_bon_DME_1","P_bh_DME_1",
-                                                "BETA_MVP","SE_MVP",
-                                                "P_MVP","P_bon_MVP","P_bh_MVP",
-                                                "P_Zhang","P_bon_Zhang","P_bh_Zhang",
-                                                "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
-#
-DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
-#
-# Write to Excel
-#
-wb<-loadWorkbook(paste0(wb_name,".xlsx"))
-sheet_name<-"S3 Gene Set Analysis" # name the sheet
-myresult<-DME_1_MVP
-#
-addWorksheet(wb,sheet_name)
-writeData(wb,sheet_name,myresult)
-addFilter(wb,sheet_name,row=1,cols=1:ncol(myresult))
-addStyle(wb,sheet_name,
-         createStyle(textDecoration ="bold",border="Bottom"),
-         rows=1,cols=1:ncol(myresult))
-setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
-freezePane(wb,sheet_name,firstRow=T)
-saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
-#
-# Write a table with only significant results
-#
-DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-write.table(DME_1_MVP,"Table_Gene_Set.csv",sep=",",row.names=F,quote=F)
-#
-#-------------------------------------------------------------------------------
 # Supplementary table: Tissue analysis
 #-------------------------------------------------------------------------------
 #
@@ -1083,44 +866,28 @@ DME_1<-read_magma_tissue("FUMA/DME_1/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.
 MVP<-read_magma_tissue("FUMA/MVP/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
 Zhang<-fread("Replication/Zhang_to_Replication_Tissue.csv")
 #
-# Are there duplicated lines?
+# Are there duplicated lines? All data tables?
 #
-DME_1_MVP<-unique(DME_1_MVP)
-DME_1<-unique(DME_1)
-MVP<-unique(MVP)
-Zhang<-unique(Zhang)
+setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
+setDT(DME_1);     DME_1     <- unique(DME_1)
+setDT(MVP);       MVP       <- unique(MVP)
+setDT(Zhang);     Zhang     <- unique(Zhang)
 #
-N<-nrow(DME_1_MVP)
-#
-for (i in 1:nrow(DME_1_MVP)) {
-  index<-which(DME_1$FULL_NAME==DME_1_MVP$FULL_NAME[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_DME_1[i]<-DME_1$BETA[index]
-    DME_1_MVP$SE_DME_1[i]<-DME_1$SE[index]
-    DME_1_MVP$P_DME_1[i]<-DME_1$P[index]
-    DME_1_MVP$P_bon_DME_1[i]<-DME_1$P_bon[index]
-    DME_1_MVP$P_bh_DME_1[i]<-DME_1$P_bh[index]
-  }
-  #
-  index<-which(MVP$FULL_NAME==DME_1_MVP$FULL_NAME[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_MVP[i]<-MVP$BETA[index]
-    DME_1_MVP$SE_MVP[i]<-MVP$SE[index]
-    DME_1_MVP$P_MVP[i]<-MVP$P[index]
-    DME_1_MVP$P_bon_MVP[i]<-MVP$P_bon[index]
-    DME_1_MVP$P_bh_MVP[i]<-MVP$P_bh[index]
-  }
-  #
-  index<-which(Zhang$FULL_NAME==DME_1_MVP$FULL_NAME[i])
-  if (length(index)==1) {
-    DME_1_MVP$P_Zhang[i]<-Zhang$P[index]
-    DME_1_MVP$P_bon_Zhang[i]<-Zhang$P_bon[index]
-    DME_1_MVP$P_bh_Zhang[i]<-Zhang$P_bh[index]
-    DME_1_MVP$n_gene_set_Zhang[i]<-Zhang$n_genes_set[index]
-    DME_1_MVP$n_overlap_Zhang[i]<-Zhang$n_overlap[index]
-    DME_1_MVP$genes_Zhang[i]<-Zhang$genes[index]
-  }
-}
+DME_1_MVP <- merge(DME_1_MVP, 
+                   DME_1[, .(FULL_NAME, BETA_DME_1 = BETA, SE_DME_1 = SE, 
+                             P_DME_1 = P, P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
+                   by = "FULL_NAME", all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   MVP[, .(FULL_NAME, BETA_MVP = BETA, SE_MVP = SE, 
+                           P_MVP = P, P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
+                   by = "FULL_NAME", all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   Zhang[, .(FULL_NAME, P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
+                             n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
+                             genes_Zhang = genes)], 
+                   by = "FULL_NAME", all.x = TRUE)
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE",
                                                 "P","P_bon","P_bh",
@@ -1131,6 +898,18 @@ DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE"
                                                 "P_Zhang","P_bon_Zhang","P_bh_Zhang",
                                                 "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
 DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
+#
+# Write a table with only significant results (BH)
+#
+dt<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
+dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+write.table(dt,"Table_Tissue_BH.csv",sep=",",row.names=F,quote=F)
+#
+# Write a table with only significant results (Bon)
+#
+dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
+dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+write.table(dt,"Table_Tissue_Bon.csv",sep=",",row.names=F,quote=F)
 #
 # Load existing workbook
 #
@@ -1148,10 +927,79 @@ setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
 freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
-# Write a table with only significant results
+#-------------------------------------------------------------------------------
+# Supplementary table: Gene Set analyses
+#-------------------------------------------------------------------------------
 #
-DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-write.table(DME_1_MVP,"Table_Tissue.csv",sep=",",row.names=F,quote=F)
+DME_1_MVP<-read_magma_gsa("FUMA/DME_1_MVP/MAGMA/magma.gsa.out")
+DME_1<-read_magma_gsa("FUMA/DME_1/MAGMA/magma.gsa.out")
+MVP<-read_magma_gsa("FUMA/MVP/MAGMA/magma.gsa.out")
+Zhang<-fread("Replication/Zhang_to_Replication_GSEA.csv")
+#
+# Are there duplicated lines? All data tables?
+#
+setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
+setDT(DME_1);     DME_1     <- unique(DME_1)
+setDT(MVP);       MVP       <- unique(MVP)
+setDT(Zhang);     Zhang     <- unique(Zhang)
+#
+# Sequential Merges (Left Joins)
+# 
+res <- merge(DME_1_MVP, 
+             DME_1[, .(FULL_NAME, BETA_DME_1 = BETA, SE_DME_1 = SE, P_DME_1 = P, 
+                       P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
+             by = "FULL_NAME", all.x = TRUE)
+
+res <- merge(res, 
+             MVP[, .(FULL_NAME, BETA_MVP = BETA, SE_MVP = SE, P_MVP = P, 
+                     P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
+             by = "FULL_NAME", all.x = TRUE)
+
+res <- merge(res, 
+             Zhang[, .(FULL_NAME, P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
+                       n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
+                       genes_Zhang = genes)], 
+             by = "FULL_NAME", all.x = TRUE)
+#
+DME_1_MVP<-res
+DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE",
+                                                "P","P_bon","P_bh",
+                                                "BETA_DME_1","SE_DME_1",
+                                                "P_DME_1","P_bon_DME_1","P_bh_DME_1",
+                                                "BETA_MVP","SE_MVP",
+                                                "P_MVP","P_bon_MVP","P_bh_MVP",
+                                                "P_Zhang","P_bon_Zhang","P_bh_Zhang",
+                                                "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
+#
+DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
+#
+# Write a table with only significant results (BH)
+#
+dt<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
+dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+write.table(dt,"Table_Gene_Set_BH.csv",sep=",",row.names=F,quote=F)
+#
+# Write a table with only significant results (Bon)
+#
+dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
+dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+write.table(dt,"Table_Gene_Set_Bon.csv",sep=",",row.names=F,quote=F)
+#
+# Write to Excel
+#
+wb<-loadWorkbook(paste0(wb_name,".xlsx"))
+sheet_name<-"S3 Gene Set Analysis" # name the sheet
+myresult<-DME_1_MVP
+#
+addWorksheet(wb,sheet_name)
+writeData(wb,sheet_name,myresult)
+addFilter(wb,sheet_name,row=1,cols=1:ncol(myresult))
+addStyle(wb,sheet_name,
+         createStyle(textDecoration ="bold",border="Bottom"),
+         rows=1,cols=1:ncol(myresult))
+setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
+freezePane(wb,sheet_name,firstRow=T)
+saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
 #-------------------------------------------------------------------------------
 # Supplementary table: DropViz L2
@@ -1162,12 +1010,12 @@ DME_1<-fread("FUMA/DME_1/DropViz_L2/magma_celltype_step1.txt")
 MVP<-fread("FUMA/MVP/DropViz_L2/magma_celltype_step1.txt")
 Zhang<-fread("Replication/Zhang_to_Replication_DropViz_L2.csv")
 #
-# Are there duplicated lines?
+# Are there duplicated lines? All data tables?
 #
-DME_1_MVP<-unique(DME_1_MVP)
-DME_1<-unique(DME_1)
-MVP<-unique(MVP)
-Zhang<-unique(Zhang)
+setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
+setDT(DME_1);     DME_1     <- unique(DME_1)
+setDT(MVP);       MVP       <- unique(MVP)
+setDT(Zhang);     Zhang     <- unique(Zhang)
 #
 # Calculate P_bh and P_bon 
 #
@@ -1180,37 +1028,24 @@ MVP[, P_bh := p.adjust(P, method = "BH")]
 Zhang[, P_bon := pmin(P * nrow(Zhang), 1)]
 Zhang[, P_bh := p.adjust(P, method = "BH")]
 #
-N<-nrow(DME_1_MVP)
-#
-for (i in 1:N) {
-  index<-which(DME_1$Cell_type==DME_1_MVP$Cell_type[i]&DME_1$Dataset==DME_1_MVP$Dataset[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_DME_1[i]<-DME_1$BETA[index]
-    DME_1_MVP$SE_DME_1[i]<-DME_1$SE[index]
-    DME_1_MVP$P_DME_1[i]<-DME_1$P[index]
-    DME_1_MVP$P_bon_DME_1[i]<-DME_1$P_bon[index]
-    DME_1_MVP$P_bh_DME_1[i]<-DME_1$P_bh[index]
-  }
-  #
-  index<-which(MVP$Cell_type==DME_1_MVP$Cell_type[i]&MVP$Dataset==DME_1_MVP$Dataset[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_MVP[i]<-MVP$BETA[index]
-    DME_1_MVP$SE_MVP[i]<-MVP$SE[index]
-    DME_1_MVP$P_MVP[i]<-MVP$P[index]
-    DME_1_MVP$P_bon_MVP[i]<-MVP$P_bon[index]
-    DME_1_MVP$P_bh_MVP[i]<-MVP$P_bh[index]
-  }
-  #
-  index<-which(Zhang$Cell_type==DME_1_MVP$Cell_type[i]&Zhang$Dataset==DME_1_MVP$Dataset[i])
-  if (length(index)==1) {
-    DME_1_MVP$P_Zhang[i]<-Zhang$P[index]
-    DME_1_MVP$P_bon_Zhang[i]<-Zhang$P_bon[index]
-    DME_1_MVP$P_bh_Zhang[i]<-Zhang$P_bh[index]
-    DME_1_MVP$n_gene_set_Zhang[i]<-Zhang$n_genes_set[index]
-    DME_1_MVP$n_overlap_Zhang[i]<-Zhang$n_overlap[index]
-    DME_1_MVP$genes_Zhang[i]<-Zhang$genes[index]
-  }
-}
+DME_1_MVP <- merge(DME_1_MVP, 
+                   DME_1[, .(Cell_type, Dataset, 
+                             BETA_DME_1 = BETA, SE_DME_1 = SE, P_DME_1 = P, 
+                             P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   MVP[, .(Cell_type, Dataset, 
+                           BETA_MVP = BETA, SE_MVP = SE, P_MVP = P, 
+                           P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   Zhang[, .(Cell_type, Dataset, 
+                             P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
+                             n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
+                             genes_Zhang = genes)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE",
                                                 "P","P_bon","P_bh",
@@ -1221,6 +1056,26 @@ DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE
                                                 "P_Zhang","P_bon_Zhang","P_bh_Zhang",
                                                 "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
 DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
+#
+# Write a table with only significant results (BH)
+#
+step3<-fread("FUMA/DME_1_MVP/DropViz_L2_BH/step1_2_summary.txt")
+step3<-subset.data.frame(step3,step3==1)
+index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
+dt<-DME_1_MVP[index,]
+dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt<-Annot_DV(dt) # Add DropViz annotations
+write.table(dt,"Table_DropViz_BH.csv",sep=",",row.names=F,quote=F)
+#
+# Write a table with only significant results (Bonferroni + Step2)
+#
+step3<-fread("FUMA/DME_1_MVP/DropViz_L2/step1_2_summary.txt")
+step3<-subset.data.frame(step3,step3==1)
+index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
+dt<-DME_1_MVP[index,]
+dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt<-Annot_DV(dt) # Add DropViz annotations
+write.table(dt,"Table_DropViz_Bon.csv",sep=",",row.names=F,quote=F)
 #
 # Load existing workbook
 #
@@ -1238,16 +1093,6 @@ setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
 freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
-# Write a table with only significant results
-#
-step3<-fread("FUMA/DME_1_MVP/DropViz_L2/step1_2_summary.txt")
-step3<-subset.data.frame(step3,step3==1)
-index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
-DNE_1_MVP<-DME_1_MVP[index,]
-DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-DME_1_MVP<-DME_1_MVP[index,]
-write.table(DME_1_MVP,"Table_DropViz.csv",sep=",",row.names=F,quote=F)
-#
 #-------------------------------------------------------------------------------
 # Supplementary table: Siletti_Seeker L2
 #-------------------------------------------------------------------------------
@@ -1257,12 +1102,12 @@ DME_1<-fread("FUMA/DME_1/Siletti_Seeker_L2/magma_celltype_step1.txt")
 MVP<-fread("FUMA/MVP/Siletti_Seeker_L2/magma_celltype_step1.txt")
 Zhang<-fread("Replication/Zhang_to_Replication_Siletti_Seeker_L2.csv")
 #
-# Are there duplicated lines?
+# Are there duplicated lines? All data tables?
 #
-DME_1_MVP<-unique(DME_1_MVP)
-DME_1<-unique(DME_1)
-MVP<-unique(MVP)
-Zhang<-unique(Zhang)
+setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
+setDT(DME_1);     DME_1     <- unique(DME_1)
+setDT(MVP);       MVP       <- unique(MVP)
+setDT(Zhang);     Zhang     <- unique(Zhang)
 #
 # Calculate P_bh and P_bon 
 #
@@ -1275,37 +1120,24 @@ MVP[, P_bh := p.adjust(P, method = "BH")]
 Zhang[, P_bon := pmin(P * nrow(Zhang), 1)]
 Zhang[, P_bh := p.adjust(P, method = "BH")]
 #
-N<-nrow(DME_1_MVP)
-#
-for (i in 1:N) {
-  index<-which(DME_1$Cell_type==DME_1_MVP$Cell_type[i]&DME_1$Dataset==DME_1_MVP$Dataset[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_DME_1[i]<-DME_1$BETA[index]
-    DME_1_MVP$SE_DME_1[i]<-DME_1$SE[index]
-    DME_1_MVP$P_DME_1[i]<-DME_1$P[index]
-    DME_1_MVP$P_bon_DME_1[i]<-DME_1$P_bon[index]
-    DME_1_MVP$P_bh_DME_1[i]<-DME_1$P_bh[index]
-  }
-  #
-  index<-which(MVP$Cell_type==DME_1_MVP$Cell_type[i]&MVP$Dataset==DME_1_MVP$Dataset[i])
-  if (length(index)==1) {
-    DME_1_MVP$BETA_MVP[i]<-MVP$BETA[index]
-    DME_1_MVP$SE_MVP[i]<-MVP$SE[index]
-    DME_1_MVP$P_MVP[i]<-MVP$P[index]
-    DME_1_MVP$P_bon_MVP[i]<-MVP$P_bon[index]
-    DME_1_MVP$P_bh_MVP[i]<-MVP$P_bh[index]
-  }
-  #
-  index<-which(Zhang$Cell_type==DME_1_MVP$Cell_type[i]&Zhang$Dataset==DME_1_MVP$Dataset[i])
-  if (length(index)==1) {
-    DME_1_MVP$P_Zhang[i]<-Zhang$P[index]
-    DME_1_MVP$P_bon_Zhang[i]<-Zhang$P_bon[index]
-    DME_1_MVP$P_bh_Zhang[i]<-Zhang$P_bh[index]
-    DME_1_MVP$n_gene_set_Zhang[i]<-Zhang$n_genes_set[index]
-    DME_1_MVP$n_overlap_Zhang[i]<-Zhang$n_overlap[index]
-    DME_1_MVP$genes_Zhang[i]<-Zhang$genes[index]
-  }
-}
+DME_1_MVP <- merge(DME_1_MVP, 
+                   DME_1[, .(Cell_type, Dataset, 
+                             BETA_DME_1 = BETA, SE_DME_1 = SE, P_DME_1 = P, 
+                             P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   MVP[, .(Cell_type, Dataset, 
+                           BETA_MVP = BETA, SE_MVP = SE, P_MVP = P, 
+                           P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   Zhang[, .(Cell_type, Dataset, 
+                             P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
+                             n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
+                             genes_Zhang = genes)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE",
                                                 "P","P_bon","P_bh",
@@ -1316,6 +1148,20 @@ DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE
                                                 "P_Zhang","P_bon_Zhang","P_bh_Zhang",
                                                 "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
 DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
+#
+# Write a table with only significant results
+#
+step3<-fread("FUMA/DME_1_MVP/Siletti_Seeker_L2/step1_2_summary.txt")
+step3<-subset.data.frame(step3,step3==1)
+index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
+dt<-DME_1_MVP[index,]
+dt<-subset.data.frame(dt,P_bh<=0.05)
+dt[,P_bon_rep_Zhang:=pmin(P_Zhang*nrow(dt),1)]  
+write.table(dt,"Table_Siletti_Seeker_BH.csv",sep=",",row.names=F,quote=F)
+#
+dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
+dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)]  
+write.table(dt,"Table_Siletti_Seeker_Bon.csv",sep=",",row.names=F,quote=F)
 #
 # Load existing workbook
 #
@@ -1332,17 +1178,4 @@ addStyle(wb,sheet_name,
 setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
 freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
-#
-# Write a table with only significant results
-#
-step3<-fread("FUMA/DME_1_MVP/Siletti_Seeker_L2/step1_2_summary.txt")
-step3<-subset.data.frame(step3,step3==1)
-index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
-DME_1_MVP<-DME_1_MVP[index,]
-DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
-DME_1_MVP[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(DME_1_MVP), 1)]  
-write.table(DME_1_MVP,"Table_Siletti_Seeker_BH.csv",sep=",",row.names=F,quote=F)
-#
-DME_1_MVP<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-DME_1_MVP[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(DME_1_MVP), 1)]  
-write.table(DME_1_MVP,"Table_Siletti_Seeker_Bon.csv",sep=",",row.names=F,quote=F)
+

@@ -83,7 +83,7 @@ Raw summary statistics are not included in this repository due to size and acces
 The script will attempt to download DecodeME data automatically. MVP data requires dbGaP access and must be placed in `Data/MVP/` manually.
 
 The FUMA preprocessed scRNA-seq archive (`preprocessed_scrnaseq.tar.gz`) must be
-downloaded manually from the FUMA website and placed in `Data/`. To obtain it:
+downloaded manually from the FUMA website and placed in the main folder. To obtain it:
 
 1. Register for a free account at [https://fuma.ctglab.nl](https://fuma.ctglab.nl)
 2. Log in and navigate to **Cell type** → **About**

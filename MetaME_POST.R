@@ -300,7 +300,7 @@ DropViz_anno<-readRDS("Data/DropViz_anno.RDS")
 #
 # Read files in archive
 #
-arc<-archive("Data/preprocessed_scrnaseq.tar.gz")
+arc<-archive("preprocessed_scrnaseq.tar.gz")
 file_list<-arc$path
 #
 # Filter to L2 resolution, Siletti + Seeker + DropViz only
@@ -313,7 +313,7 @@ file_list_filtered<-file_list[
 # For each data set build a file to use for ORA
 #
 for (i in 1:length(file_list_filtered)){
-  archive_path<-"Data/preprocessed_scrnaseq.tar.gz"
+  archive_path<-"preprocessed_scrnaseq.tar.gz"
   file_name<-file_list_filtered[i]
   top_quantile<-0.90 
   log2fc_cutoff<-1
@@ -1065,7 +1065,7 @@ index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$D
 dt<-DME_1_MVP[index,]
 dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
 dt<-Annot_DV(dt) # Add DropViz annotations
-write.table(dt,"Table_DropViz_BH.csv",sep=",",row.names=F,quote=F)
+write.table(dt,"Table_DropViz_BH.csv",sep=",",row.names=F,quote=T)
 #
 # Write a table with only significant results (Bonferroni + Step2)
 #
@@ -1075,7 +1075,7 @@ index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$D
 dt<-DME_1_MVP[index,]
 dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
 dt<-Annot_DV(dt) # Add DropViz annotations
-write.table(dt,"Table_DropViz_Bon.csv",sep=",",row.names=F,quote=F)
+write.table(dt,"Table_DropViz_Bon.csv",sep=",",row.names=F,quote=T)
 #
 # Load existing workbook
 #

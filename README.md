@@ -88,9 +88,9 @@ The following files must be manually downloaded from FUMA [download page](https:
 
 | File | Size | Description |
 |:-----|-----:|:------------|
-| gtex_v8_ts_DEG.txt | 12 MB | The gene-set of the differentially expressed genes in GTEx v8 across 54 tissues. This file is used for GENE2FUNC tissue specificity analysis. |
-| MSigDB_20231Hs_MAGMA.txt | 24 MB | MAGMA gene-set analysis file used in SNP2GENE from FUMA version 1.5.6 onwards. |
-| preprocessed_scrnaseq.tar.gz | 1.9 GB | This is a tar zip folder containing pre-processed scRNAseq datasets for the FUMA Cell Type module. After download, use the command "tar -xzvf" to untar. |
+| gtex_v8_ts_DEG.txt | 12MB | The gene-set of the differentially expressed genes in GTEx v8 across 54 tissues. This file is used for GENE2FUNC tissue specificity analysis. |
+| MSigDB_20231Hs_MAGMA.txt | 24MB | MAGMA gene-set analysis file used in SNP2GENE from FUMA version 1.5.6 onwards. |
+| preprocessed_scrnaseq.tar.gz | 1.9GB | This is a tar zip folder containing pre-processed scRNAseq datasets for the FUMA Cell Type module. After download, use the command "tar -xzvf" to untar. |
 
 ---
 

@@ -32,7 +32,7 @@ The pipeline consists of two main scripts:
 ## Cohorts
 
 | Cohort | Cases | Controls | Ancestry | Type | Role |
-|---|---|---|---|---|
+|---|---|---|---|---|----|
 | DME-1 (DecodeME) | 15,579 | 259,909 | EUR | GWAS | Discovery |
 | MVP | 3,891 | 439,202 | EUR | GWAS | Discovery |
 | Zhang et al. | 283 | 213 | EUR | WGS | Replication | 

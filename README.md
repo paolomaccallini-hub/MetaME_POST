@@ -66,35 +66,31 @@ BiocManager::install(c(
 
 ### External tools
 
-- [METAL](https://github.com/statgen/METAL) — weighted Z-score meta-analysis. The pipeline runs METAL via WSL on Windows; adjust `path_metal_exe` in `MetaME_config.yml` for your system.
+- [METAL](https://github.com/statgen/METAL) — weighted Z-score meta-analysis. The pipeline runs METAL via WSL on Windows. METAL source code (version 2011-03-25) must be downloaded from [THIS PAGE](https://csg.sph.umich.edu/abecasis/Metal/download/) and compiled. To integrate in the MetaME, adjust `path_metal_exe` in `MetaME_config.yml` for your system.
 - [FUMA](https://fuma.ctglab.nl) — SNP2GENE, MAGMA gene-set/tissue/cell-type analyses. FUMA jobs are submitted manually using the config files in `FUMA/configs/`.
 
 ---
 
 ## Data
 
-Raw summary statistics are not included in this repository due to size and access restrictions. Download them from the following sources before running the pipeline:
+### Summary Statistics
+
+Raw summary statistics are not included in this repository due to size and access restrictions. The script will download them automatically from the following sources:
 
 | Database | Symbol | Cases | Controls | Trait | Regression | Ancestry | Assembly | Reference | Summary Statistics |
 | :------- | :----- | -----:| --------:| :---- | :--------- | :------- | :------- | :-------- | :----------------- |
 | **DecodeME** | DME_1 | 15,579 | 259,909 | CFS (CCC/IOM) | Logistic | EUR | GRCh38 | [Preprint_2025](https://www.research.ed.ac.uk/en/publications/initial-findings-from-the-decodeme-genome-wide-association-study-) | [GWAS-1](https://osf.io/rgqs3/files) |
 | **Million_Veteran_Program** | MVP | 3,891 | 439,202 | PheCode_798.1 CFS | Logistic (SAIGE) | EUR | GRCh38 | [Verma_2024](https://pubmed.ncbi.nlm.nih.gov/39024449/) | [GCST90479178](https://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90479001-GCST90480000/GCST90479178/) |
 
-The script will attempt to download DecodeME data automatically. MVP data requires dbGaP access and must be placed in `Data/MVP/` manually.
+### Gene-sets, tissue expression, and cell-type datasets
 
-The FUMA preprocessed scRNA-seq archive (`preprocessed_scrnaseq.tar.gz`) must be
-downloaded manually from the FUMA website and placed in the main folder. To obtain it:
+The following files must be manually downloaded from FUMA [download page](https://fuma.ctglab.nl/downloadPage) and put on the main folder.
 
-1. Register for a free account at [https://fuma.ctglab.nl](https://fuma.ctglab.nl)
-2. Log in and navigate to **Cell type** → **About**
-3. Download the file **preprocessed_scrnaseq.tar.gz** (approximately 4 GB)
-4. Place it at `Data/preprocessed_scrnaseq.tar.gz`
-
-This file contains the preprocessed single-nucleus RNA-seq expression matrices
-from the Siletti et al. (2023), Seeker et al. (2023), and DropViz (Saunders et al.
-2018) atlases, preprocessed by the FUMA team for use with the MAGMA cell-type
-analysis pipeline. The `MetaME_POST.R` script reads this archive directly without
-unpacking it, using the `archive` R package.
+| File | Size | Description |
+|:-----|-----:|:------------|
+| gtex_v8_ts_DEG.txt | 12 MB | The gene-set of the differentially expressed genes in GTEx v8 across 54 tissues. This file is used for GENE2FUNC tissue specificity analysis. |
+| MSigDB_20231Hs_MAGMA.txt | 24 MB | MAGMA gene-set analysis file used in SNP2GENE from FUMA version 1.5.6 onwards. |
+| preprocessed_scrnaseq.tar.gz | 1.9 GB | This is a tar zip folder containing pre-processed scRNAseq datasets for the FUMA Cell Type module. After download, use the command "tar -xzvf" to untar. |
 
 ---
 

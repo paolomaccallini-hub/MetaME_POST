@@ -40,31 +40,7 @@ The pipeline consists of two main scripts:
 
 ---
 
-## Dependencies
-
-### R packages
-
-```r
-# CRAN
-install.packages(c("httr", "R.utils", "data.table", "yaml",
-                   "ggplot2", "patchwork", "readxl", "stringr",
-                   "openxlsx", "archive"))
-
-# Bioconductor
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install(c(
-  "MungeSumstats",
-  "BSgenome.Hsapiens.NCBI.GRCh38",
-  "SNPlocs.Hsapiens.dbSNP155.GRCh38",
-  "SNPlocs.Hsapiens.dbSNP155.GRCh37",
-  "BSgenome.Hsapiens.1000genomes.hs37d5",
-  "TissueEnrich",
-  "org.Hs.eg.db"
-))
-```
-
-### External tools
+## External tools
 
 - [METAL](https://github.com/statgen/METAL) — weighted Z-score meta-analysis. The pipeline runs METAL via WSL on Windows. METAL source code (version 2011-03-25) must be downloaded from [THIS PAGE](https://csg.sph.umich.edu/abecasis/Metal/download/) and compiled. To integrate in the MetaME, adjust `path_metal_exe` in `MetaME_config.yml` for your system.
 - [FUMA](https://fuma.ctglab.nl) — SNP2GENE, MAGMA gene-set/tissue/cell-type analyses. FUMA jobs are submitted manually using the config files in `FUMA/configs/`.

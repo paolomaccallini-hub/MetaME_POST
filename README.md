@@ -102,20 +102,22 @@ git clone https://github.com/<your-username>/MetaME_POST.git
 cd MetaME
 ```
 
-2. Edit `MetaME_config.yml` to set the path to your METAL executable:
+2. Download METAL source code from [this page](https://csg.sph.umich.edu/abecasis/Metal/download/) and compile it
+
+3. Edit `MetaME_config.yml` to set the path to your METAL executable:
 ```yaml
 METAL:
   path_metal_exe: "/path/to/metal"
 ```
 
-3. Run the main pipeline:
+4. Run the main pipeline:
 ```r
 source("MetaME_main.R")
 ```
 
-4. Submit FUMA jobs using the config files in `FUMA/configs/`. Full dataset identifiers and FUMA job parameters are documented there. FUMA output is available in this repository.
+5. Submit FUMA jobs using the config files in `FUMA/configs/`. Full dataset identifiers and FUMA job parameters are documented there. FUMA output is available in this repository.
 
-5. Once FUMA results are available, place them in `FUMA/results/` and run the post-processing script:
+6. Once FUMA results are available, place them in `FUMA/results/` and run the post-processing script:
 ```r
 source("MetaME_POST.R")
 ```

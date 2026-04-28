@@ -31,10 +31,11 @@ The pipeline consists of two main scripts:
 
 ## Cohorts
 
-| Cohort | Cases | Controls | Ancestry | Assembly |
+| Cohort | Cases | Controls | Ancestry | Type | Role |
 |---|---|---|---|---|
-| DME-1 (DecodeME) | 15,579 | 259,909 | EUR | GRCh38 |
-| MVP | 3,891 | 439,202 | EUR | GRCh38 |
+| DME-1 (DecodeME) | 15,579 | 259,909 | EUR | GWAS | Discovery |
+| MVP | 3,891 | 439,202 | EUR | GWAS | Discovery |
+| Zhang et al. | 283 | 213 | EUR | WGS | Replication | 
 
 **Meta-analysis**: DME-1 + MVP, N_eff = 74,219 and 8,859,361 variants, METAL SAMPLESIZE scheme.
 

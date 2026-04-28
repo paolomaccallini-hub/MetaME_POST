@@ -146,13 +146,14 @@ All jobs used GRCh37, EUR reference panel (1000 Genomes Phase 3), MHC region exc
 
 ## Cell-type gene set construction
 
-Foreground gene sets for ORA replication were constructed from the FUMA preprocessed scRNA-seq matrices. A gene *g* was included in the foreground for cell type *c* if:
+Foreground gene sets for ORA replication were constructed from the FUMA preprocessed scRNA-seq matrices using the top-decile expression proportion (TDEP) as described in ([Yao S. et al. 2024](https://www.nature.com/articles/s41467-024-55611-1)) and the
+following further condition
 
 ```
-E(g,c) > Q90(c)   AND   E(g,c) - mean_A(g) > 1
+E(g,c) - mean_A(g) > 1
 ```
 
-where `Q90(c)` is the 90th percentile of expression within cell type *c* and `mean_A(g)` is the cross-cell-type geometric mean expression for gene *g* (both on the log2 scale as provided by FUMA). This restricts each foreground to the top 10% most expressed genes in each cell type with at least 2-fold enrichment over the cross-cell-type mean.
+where `E(g,c)` is the log2 transformed pseudocount of gene *g* in cell type *c* and `mean_A(g)` is the cross-cell-type geometric mean expression for gene *g* (on the log2 scale). This restricts each foreground to the top 10% most-expressed genes in each cell type with at least 2-fold enrichment over the cross-cell-type mean.
 
 ---
 

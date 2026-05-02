@@ -14,6 +14,7 @@ library(stringr)
 library(org.Hs.eg.db)
 library(openxlsx)
 library(archive)
+library(clusterProfiler)
 #
 #-------------------------------------------------------------------------------
 # Functions
@@ -88,90 +89,6 @@ read_tissue_ensembl<-function(path) {
   return(results)
 }
 #
-# This function performs ORA on "MSigDB_20231Hs_MAGMA.txt" 
-# and on edited "gtex_v8_ts_DEG.txt"
-#
-ora_fuma<-function(my_genes_ensembl,background,msigdb) {
-  #
-  # Remove genes not in background
-  #
-  index<-which(my_genes_ensembl%in%background)
-  gene_list<-my_genes_ensembl[index]
-  #
-  # Remove genes not in background
-  #
-  index<-which(msigdb$ensembl_id%in%background)
-  msigdb<-msigdb[index,]
-  #
-  # Retrieve number of elements in background and in query list
-  #
-  N1<-length(gene_list)
-  NB<-length(background)
-  #
-  # Retrieve unique gene sets
-  #
-  gene_sets<-unique(msigdb$gs_name)
-  #
-  # Where we store the results?
-  #
-  results_list<-list()
-  #
-  # Perform ORA
-  #
-  for (gs in gene_sets) {
-    #
-    # Current gene set and its size
-    #
-    gene_set<-msigdb[gs_name==gs,ensembl_id]
-    N2<-length(gene_set)
-    #
-    # Overlap?
-    #
-    Overlap<-gene_list[gene_list%in%gene_set]
-    NR<-length(Overlap)
-    #
-    # Calculate overlap pval P(X>NR-1)=P(X>=NR)
-    #
-    if (NR==0) {
-      P_val<-1
-    } else {
-      #
-      # We use the notation you find in R documentation.
-      # The urn is the set of background genes. The white balls are the genes of
-      # the gene set under scrutiny (gs), the black balls are all the remaining
-      # genes of the background, the white balls extracted are the overlapping
-      # genes between gene_list and gs. Since phyper computes P(X>q) but we want
-      # P(X>=q), therefore we consider q-1 instead of q in the function.
-      # All that said we have:
-      # 
-      q<-NR # number of white balls extracted: overlap between gs and gene_list
-      m<-N2 # number of white balls in the urn: genes in gs
-      n<-NB-N2 # number of black balls in the urn: genes of background not included in gs
-      k<-N1 # number of balls extracted: size of gene_list
-      P_val<-as.numeric(phyper(q-1,m,n,k,lower.tail=F)) # P(X>NR-1)=P(X>=NR)
-    }
-    #
-    # Save results
-    #
-    results_list[[gs]]<-data.table(
-      FULL_NAME   = gs,
-      n_genes_set = N2,
-      n_overlap   = NR,
-      P           = P_val,
-      genes       = paste(Overlap,collapse=";")
-    )
-  }
-  #
-  # Collapse list into a single data table
-  #
-  results<-rbindlist(results_list)
-  #
-  results[,P_bh:=p.adjust(P,method="BH")]
-  results[,P_bon:=p.adjust(P,method="bonferroni")]
-  setorder(results, P)
-  return(results)
-}
-#
 # This function reads and edit cell type datasets.
 # It derives SEGs for each cell type using top decile expression proprotion
 # as described in: https://www.nature.com/articles/s41467-024-55611-1
@@ -213,7 +130,7 @@ make_celltype_genesets<-function(archive_path,file_name,top_quantile=0.9,log2fc_
     scores<-prop_mat[, j]
     threshold<-quantile(scores,top_quantile,na.rm=TRUE)
     lfc_scores<-dt[[cell_types[j]]]-dt$Average
-    idx<-which(scores>threshold&lfc_scores>log2fc_cutoff) 
+    idx<-which(scores>=threshold&lfc_scores>log2fc_cutoff) 
     #
     if (length(idx)>0) {
       mylist[[counter]]<-data.table(
@@ -323,7 +240,7 @@ for (i in 1:length(file_list_filtered)){
 }
 #
 #-----------------------------------------------------------------------------
-# Download ME/CFS module form Zhang S. 2025 
+# Download ME/CFS module form HEAL2 S. 2025 
 # We use supplementary table 2.
 #-----------------------------------------------------------------------------
 #
@@ -332,7 +249,7 @@ url<-paste0("https://www.medrxiv.org/content/medrxiv/early/2025/05/11/2025.04.15
 destfile<-"media-9.xlsx"
 file_path<-file.path(current_dir,"Data",destfile)
 if(!file.exists(file_path)) {
-  print("Downloading data from Zhang S. et al. 2025 (https://pmc.ncbi.nlm.nih.gov/articles/PMC12047926/)...")
+  print("Downloading data from HEAL2 S. et al. 2025 (https://pmc.ncbi.nlm.nih.gov/articles/PMC12047926/)...")
   RETRY(
     verb = "GET",
     url = url,
@@ -344,24 +261,24 @@ if(!file.exists(file_path)) {
 }   
 #
 #-----------------------------------------------------------------------------
-# Read ME/CFS module form Zhang S. 2025 (https://pmc.ncbi.nlm.nih.gov/articles/PMC12047926/)
+# Read ME/CFS module form HEAL2 S. 2025 (https://pmc.ncbi.nlm.nih.gov/articles/PMC12047926/)
 # We use supplementary table 2.
 #-----------------------------------------------------------------------------
 #
-Module<-read_xlsx("Data/media-9.xlsx") # all 17759 genes of Zhang's study
-Zhang_module<-subset.data.frame(Module,q_value<0.02) # 115 genes associated with ME/CFS  
+Module<-read_xlsx("Data/media-9.xlsx") # all 17759 genes of HEAL2's study
+HEAL2_module<-subset.data.frame(Module,q_value<0.02) # 115 genes associated with ME/CFS  
 #
 #-----------------------------------------------------------------------------
-# Retrieve ensembl IDs for Zhang_Module and for Module
+# Retrieve ensembl IDs for HEAL2_Module and for Module
 #-----------------------------------------------------------------------------
 #
 mapped<-AnnotationDbi::select(
   org.Hs.eg.db,
-  keys=Zhang_module$Gene,
+  keys=HEAL2_module$Gene,
   columns=c("SYMBOL","ENSEMBL"),
   keytype="SYMBOL"
 )
-my_genes_ensembl<-unique(mapped$ENSEMBL[!is.na(mapped$ENSEMBL)])
+mygenesHEAL2<-unique(mapped$ENSEMBL[!is.na(mapped$ENSEMBL)])
 #
 mapped<-AnnotationDbi::select(
   org.Hs.eg.db,
@@ -373,20 +290,23 @@ my_universe_ensembl<-unique(mapped$ENSEMBL[!is.na(mapped$ENSEMBL)])
 #
 #-------------------------------------------------------------------------------
 # Discovery: DME_1_MVP
-# Replication: Zhang
+# Replication: HEAL2
 #-------------------------------------------------------------------------------
 #
 #-------------------------------------------------------------------------------
 # Gene-set enrichment analysis
 #-------------------------------------------------------------------------------
 #
-replication_path<-"Zhang"
+replication_path<-"HEAL2"
 #
-# Perform ORA on Zhang module
+# Perform ORA on HEAL2 module
 #
 msigdb<-read_gmt_ensembl("MSigDB_20231Hs_MAGMA.txt")
-background<-my_universe_ensembl
-Replication<-ora_fuma(my_genes_ensembl,background,msigdb)
+my_sets<-data.frame(term=msigdb$gs_name,gene=msigdb$ensembl_id)
+res<-enricher(gene=mygenesHEAL2,universe=my_universe_ensembl,TERM2GENE=my_sets,
+              pAdjustMethod="BH",pvalueCutoff=1,qvalueCutoff=1,minGSSize=0,maxGSSize=Inf) 
+Replication<-as.data.frame(res)
+setnames(Replication,c("ID","pvalue","geneID"),c("FULL_NAME","P","genes"))
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_GSEA.csv"),
             sep=",",row.names=F)
 #
@@ -394,13 +314,16 @@ write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_
 # Tissue enrichment analysis
 #-------------------------------------------------------------------------------
 #
-replication_path<-"Zhang"
+replication_path<-"HEAL2"
 #
-# Perform ORA on Zhang module
+# Perform ORA on HEAL2 module
 #
 GTExv8<-read_tissue_ensembl("gtex_v8_ts_DEG.txt")
-background<-my_universe_ensembl
-Replication<-ora_fuma(my_genes_ensembl,background,GTExv8)
+my_sets<-data.frame(term=GTExv8$gs_name,gene=GTExv8$ensembl_id)
+res<-enricher(gene=mygenesHEAL2,universe=my_universe_ensembl,TERM2GENE=my_sets,
+              pAdjustMethod="BH",pvalueCutoff=1,qvalueCutoff=1,minGSSize=0,maxGSSize=Inf) 
+Replication<-as.data.frame(res)
+setnames(Replication,c("ID","pvalue","geneID"),c("FULL_NAME","P","genes"))
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_Tissue.csv"),
             sep=",",row.names=F)
 #
@@ -409,14 +332,14 @@ write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_
 #-------------------------------------------------------------------------------
 #
 discovery_path<-"DME_1_MVP"
-replication_path<-"Zhang"
+replication_path<-"HEAL2"
 #
 # Read Discovery 
 #
 Discovery<-read_magma_cell("FUMA/DME_1_MVP/DropViz_L2/magma_celltype_step1.txt")
 Discovery<-unique(Discovery)
 #
-# Perform ORA on Zhang module
+# Perform ORA on HEAL2 module
 #
 Replication_list<-list()
 background<-my_universe_ensembl
@@ -424,21 +347,15 @@ unique_ds<-unique(Discovery$Dataset)
 for (i in 1:length(unique_ds)) {
   file_name<-unique_ds[i]
   dataset<-fread(paste0("Data/Cell_type/",file_name,".txt"))
-  Replication_list[[i]]<-ora_fuma(my_genes_ensembl,background,dataset)
+  my_sets<-data.frame(term=dataset$gs_name,gene=dataset$ensembl_id)
+  res<-enricher(gene=mygenesHEAL2,universe=my_universe_ensembl,TERM2GENE=my_sets,
+                pAdjustMethod="BH",pvalueCutoff=1,qvalueCutoff=1,minGSSize=0,maxGSSize=Inf) 
+  Replication_list[[i]]<-as.data.frame(res)
   Replication_list[[i]]$Dataset<-rep(file_name,nrow(Replication_list[[i]]))
 }
 Replication<-rbindlist(Replication_list)
-for (j in 1:ncol(Replication)) {
-  if (colnames(Replication)[j]=="FULL_NAME") {
-    colnames(Replication)[j]<-"Cell_type"
-  }
-}
+setnames(Replication,c("ID","pvalue","geneID"),c("Cell_type","P","genes"))
 Replication<-unique(Replication)
-#
-# Calculate P_bon and P_bh
-#
-Replication[, P_bon := pmin(P * nrow(Replication), 1)]
-Replication[, P_bh := p.adjust(P, method = "BH")] 
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_DropViz_L2.csv"),
             sep=",",row.names=F)
 #
@@ -453,14 +370,14 @@ write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_
 #-------------------------------------------------------------------------------
 #
 discovery_path<-"DME_1_MVP"
-replication_path<-"Zhang"
+replication_path<-"HEAL2"
 #
 # Read Discovery
 #
 Discovery<-read_magma_cell("FUMA/DME_1_MVP/Siletti_Seeker_L2/magma_celltype_step1.txt")
 Discovery<-unique(Discovery) # I found duplicates
 #
-# Perform ORA on Zhang module
+# Perform ORA on HEAL2 module
 #
 Replication_list<-list()
 background<-my_universe_ensembl
@@ -468,21 +385,15 @@ unique_ds<-unique(Discovery$Dataset)
 for (i in 1:length(unique_ds)) {
   file_name<-unique_ds[i]
   dataset<-fread(paste0("Data/Cell_type/",file_name,".txt"))
-  Replication_list[[i]]<-ora_fuma(my_genes_ensembl,background,dataset)
+  my_sets<-data.frame(term=dataset$gs_name,gene=dataset$ensembl_id)
+  res<-enricher(gene=mygenesHEAL2,universe=my_universe_ensembl,TERM2GENE=my_sets,
+                pAdjustMethod="BH",pvalueCutoff=1,qvalueCutoff=1,minGSSize=0,maxGSSize=Inf) 
+  Replication_list[[i]]<-as.data.frame(res)
   Replication_list[[i]]$Dataset<-rep(file_name,nrow(Replication_list[[i]]))
 }
 Replication<-rbindlist(Replication_list)
-for (j in 1:ncol(Replication)) {
-  if (colnames(Replication)[j]=="FULL_NAME") {
-    colnames(Replication)[j]<-"Cell_type"
-  }
-}
+setnames(Replication,c("ID","pvalue","geneID"),c("Cell_type","P","genes"))
 Replication<-unique(Replication)
-#
-# Calculate P_bon and P_bh
-#
-Replication[, P_bon := pmin(P * nrow(Replication), 1)]
-Replication[, P_bh := p.adjust(P, method = "BH")] 
 write.table(Replication,paste0("Replication/",replication_path,"_to_Replication_Siletti_Seeker_L2.csv"),
             sep=",",row.names=F)
 #
@@ -519,8 +430,8 @@ readme <- data.frame(
     "FULL_NAME", "NGENES", "BETA", "SE", "P", "P_bon", "P_bh",
     "BETA_DME_1", "SE_DME_1", "P_DME_1", "P_bon_DME_1", "P_bh_DME_1",
     "BETA_MVP", "SE_MVP", "P_MVP", "P_bon_MVP", "P_bh_MVP",
-    "P_Zhang", "P_bon_Zhang", "P_bh_Zhang",
-    "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang",
+    "P_HEAL2", "P_bon_HEAL2", "P_bh_HEAL2",
+    "GeneRatio", "BgRatio", "FoldEnrichment", "genes",
     "",
     #---------------------------------------------------------------------------
     "Table S4",
@@ -528,8 +439,8 @@ readme <- data.frame(
     "FULL_NAME", "NGENES", "BETA", "SE", "P", "P_bon", "P_bh",
     "BETA_DME_1", "SE_DME_1", "P_DME_1", "P_bon_DME_1", "P_bh_DME_1",
     "BETA_MVP", "SE_MVP", "P_MVP", "P_bon_MVP", "P_bh_MVP",
-    "P_Zhang", "P_bon_Zhang", "P_bh_Zhang",
-    "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang",
+    "P_HEAL2", "P_bon_HEAL2", "P_bh_HEAL2",
+    "GeneRatio", "BgRatio", "FoldEnrichment", "genes",
     "",
     #---------------------------------------------------------------------------
     "Table S5",
@@ -537,8 +448,8 @@ readme <- data.frame(
     "Dataset", "Cell_type", "BETA", "SE", "P", "P_bon", "P_bh",
     "BETA_DME_1", "SE_DME_1", "P_DME_1", "P_bon_DME_1", "P_bh_DME_1",
     "BETA_MVP", "SE_MVP", "P_MVP", "P_bon_MVP", "P_bh_MVP",
-    "P_Zhang", "P_bon_Zhang", "P_bh_Zhang",
-    "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang",
+    "P_HEAL2", "P_bon_HEAL2", "P_bh_HEAL2",
+    "GeneRatio", "BgRatio", "FoldEnrichment", "genes",
     "",
     #---------------------------------------------------------------------------
     "Table S6",
@@ -546,8 +457,8 @@ readme <- data.frame(
     "Dataset", "Cell_type", "BETA", "SE", "P", "P_bon", "P_bh",
     "BETA_DME_1", "SE_DME_1", "P_DME_1", "P_bon_DME_1", "P_bh_DME_1",
     "BETA_MVP", "SE_MVP", "P_MVP", "P_bon_MVP", "P_bh_MVP",
-    "P_Zhang", "P_bon_Zhang", "P_bh_Zhang",
-    "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang",
+    "P_HEAL2", "P_bon_HEAL2", "P_bh_HEAL2",
+    "GeneRatio", "BgRatio", "FoldEnrichment", "genes",
     ""
   ),
   Description = c(
@@ -608,11 +519,12 @@ readme <- data.frame(
     "Raw P-value (MVP alone)",
     "Bonferroni-corrected P-value (MVP alone)",
     "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 Zhang et al. (2025) ME/CFS candidate genes against the gene set; background: 17,759 STRING network genes",
-    "Bonferroni-corrected P-value for Zhang ORA",
-    "Benjamini-Hochberg-adjusted P-value for Zhang ORA",
-    "size of the gene set in Zhang ORA",
-    "size of the overlap in Zhang ORA",
+    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against the gene set; background: 17,759 STRING network genes",
+    "Bonferroni-corrected P-value for HEAL2 ORA",
+    "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
+    "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
+    "nuber of genes of the gene set in background/number of genes in background",
+    "GeneRatio/BgRatio",
     "IDs of overlapping genes",
     "",
     #---------------------------------------------------------------------------
@@ -635,11 +547,12 @@ readme <- data.frame(
     "Raw P-value (MVP alone)",
     "Bonferroni-corrected P-value (MVP alone; k=54)",
     "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 Zhang et al. (2025) ME/CFS candidate genes against upregulated genes per tissue (gtex_v8_ts_DEG.txt); background: 17,759 STRING network genes",
-    "Bonferroni-corrected P-value for Zhang ORA (k=54)",
-    "Benjamini-Hochberg-adjusted P-value for Zhang ORA",
-    "size of the gene set in Zhang ORA",
-    "size of the overlap in Zhang ORA",
+    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against upregulated genes per tissue (gtex_v8_ts_DEG.txt); background: 17,759 STRING network genes",
+    "Bonferroni-corrected P-value for HEAL2 ORA (k=54)",
+    "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
+    "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
+    "nuber of genes of the gene set in background/number of genes in background",
+    "GeneRatio/BgRatio",
     "IDs of overlapping genes",
     "",
     #---------------------------------------------------------------------------
@@ -662,11 +575,12 @@ readme <- data.frame(
     "Raw P-value (MVP alone)",
     "Bonferroni-corrected P-value (MVP alone)",
     "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 Zhang et al. (2025) ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
-    "Bonferroni-corrected P-value for Zhang ORA (k=565)",
-    "Benjamini-Hochberg-adjusted P-value for Zhang ORA",
-    "size of the gene set in Zhang ORA",
-    "size of the overlap in Zhang ORA",
+    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
+    "Bonferroni-corrected P-value for HEAL2 ORA (k=565)",
+    "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
+    "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
+    "nuber of genes of the gene set in background/number of genes in background",
+    "GeneRatio/BgRatio",
     "IDs of overlapping genes",
     "",
     #---------------------------------------------------------------------------
@@ -689,11 +603,12 @@ readme <- data.frame(
     "Raw P-value (MVP alone)",
     "Bonferroni-corrected P-value (MVP alone)",
     "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 Zhang et al. (2025) ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
-    "Bonferroni-corrected P-value for Zhang ORA",
-    "Benjamini-Hochberg-adjusted P-value for Zhang ORA",
-    "size of the gene set in Zhang ORA",
-    "size of the overlap in Zhang ORA",
+    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
+    "Bonferroni-corrected P-value for HEAL2 ORA",
+    "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
+    "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
+    "nuber of genes of the gene set in background/number of genes in background",
+    "GeneRatio/BgRatio",
     "IDs of overlapping genes",
     ""
   ),
@@ -864,14 +779,25 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 DME_1_MVP<-read_magma_tissue("FUMA/DME_1_MVP/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
 DME_1<-read_magma_tissue("FUMA/DME_1/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
 MVP<-read_magma_tissue("FUMA/MVP/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
-Zhang<-fread("Replication/Zhang_to_Replication_Tissue.csv")
+HEAL2<-fread("Replication/HEAL2_to_Replication_Tissue.csv")
 #
 # Are there duplicated lines? All data tables?
 #
 setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
 setDT(DME_1);     DME_1     <- unique(DME_1)
 setDT(MVP);       MVP       <- unique(MVP)
-setDT(Zhang);     Zhang     <- unique(Zhang)
+setDT(HEAL2);     HEAL2     <- unique(HEAL2)
+#
+# Calculate P_bh and P_bon 
+#
+DME_1_MVP[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+DME_1_MVP[, P_bh := p.adjust(P, method = "BH")]
+DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
+DME_1[, P_bh := p.adjust(P, method = "BH")]
+MVP[, P_bon := pmin(P * nrow(MVP), 1)]
+MVP[, P_bh := p.adjust(P, method = "BH")]
+HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+HEAL2[, P_bh := p.adjust(P, method = "BH")]
 #
 DME_1_MVP <- merge(DME_1_MVP, 
                    DME_1[, .(FULL_NAME, BETA_DME_1 = BETA, SE_DME_1 = SE, 
@@ -884,9 +810,8 @@ DME_1_MVP <- merge(DME_1_MVP,
                    by = "FULL_NAME", all.x = TRUE)
 
 DME_1_MVP <- merge(DME_1_MVP, 
-                   Zhang[, .(FULL_NAME, P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
-                             n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
-                             genes_Zhang = genes)], 
+                   HEAL2[, .(FULL_NAME, P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
+                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
                    by = "FULL_NAME", all.x = TRUE)
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE",
@@ -895,20 +820,21 @@ DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE"
                                                 "P_DME_1","P_bon_DME_1","P_bh_DME_1",
                                                 "BETA_MVP","SE_MVP",
                                                 "P_MVP","P_bon_MVP","P_bh_MVP",
-                                                "P_Zhang","P_bon_Zhang","P_bh_Zhang",
-                                                "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
+                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
+                                                "GeneRatio", "BgRatio", "FoldEnrichment",
+                                                "genes"))
 DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
 #
 # Write a table with only significant results (BH)
 #
 dt<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
-dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
 write.table(dt,"Table_Tissue_BH.csv",sep=",",row.names=F,quote=F)
 #
 # Write a table with only significant results (Bon)
 #
 dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
 write.table(dt,"Table_Tissue_Bon.csv",sep=",",row.names=F,quote=F)
 #
 # Load existing workbook
@@ -934,55 +860,64 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 DME_1_MVP<-read_magma_gsa("FUMA/DME_1_MVP/MAGMA/magma.gsa.out")
 DME_1<-read_magma_gsa("FUMA/DME_1/MAGMA/magma.gsa.out")
 MVP<-read_magma_gsa("FUMA/MVP/MAGMA/magma.gsa.out")
-Zhang<-fread("Replication/Zhang_to_Replication_GSEA.csv")
+HEAL2<-fread("Replication/HEAL2_to_Replication_GSEA.csv")
 #
 # Are there duplicated lines? All data tables?
 #
 setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
 setDT(DME_1);     DME_1     <- unique(DME_1)
 setDT(MVP);       MVP       <- unique(MVP)
-setDT(Zhang);     Zhang     <- unique(Zhang)
+setDT(HEAL2);     HEAL2     <- unique(HEAL2)
+#
+# Calculate P_bh and P_bon 
+#
+DME_1_MVP[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+DME_1_MVP[, P_bh := p.adjust(P, method = "BH")]
+DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
+DME_1[, P_bh := p.adjust(P, method = "BH")]
+MVP[, P_bon := pmin(P * nrow(MVP), 1)]
+MVP[, P_bh := p.adjust(P, method = "BH")]
+HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+HEAL2[, P_bh := p.adjust(P, method = "BH")]
 #
 # Sequential Merges (Left Joins)
 # 
-res <- merge(DME_1_MVP, 
+DME_1_MVP <- merge(DME_1_MVP, 
              DME_1[, .(FULL_NAME, BETA_DME_1 = BETA, SE_DME_1 = SE, P_DME_1 = P, 
                        P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
              by = "FULL_NAME", all.x = TRUE)
 
-res <- merge(res, 
+DME_1_MVP <- merge(DME_1_MVP, 
              MVP[, .(FULL_NAME, BETA_MVP = BETA, SE_MVP = SE, P_MVP = P, 
                      P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
              by = "FULL_NAME", all.x = TRUE)
 
-res <- merge(res, 
-             Zhang[, .(FULL_NAME, P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
-                       n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
-                       genes_Zhang = genes)], 
-             by = "FULL_NAME", all.x = TRUE)
+DME_1_MVP <- merge(DME_1_MVP, 
+                   HEAL2[, .(FULL_NAME, P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
+                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
+                   by = "FULL_NAME", all.x = TRUE)
 #
-DME_1_MVP<-res
 DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE",
                                                 "P","P_bon","P_bh",
                                                 "BETA_DME_1","SE_DME_1",
                                                 "P_DME_1","P_bon_DME_1","P_bh_DME_1",
                                                 "BETA_MVP","SE_MVP",
                                                 "P_MVP","P_bon_MVP","P_bh_MVP",
-                                                "P_Zhang","P_bon_Zhang","P_bh_Zhang",
-                                                "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
-#
+                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
+                                                "GeneRatio", "BgRatio", "FoldEnrichment",
+                                                "genes"))
 DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
 #
 # Write a table with only significant results (BH)
 #
 dt<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
-dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
 write.table(dt,"Table_Gene_Set_BH.csv",sep=",",row.names=F,quote=F)
 #
 # Write a table with only significant results (Bon)
 #
 dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
 write.table(dt,"Table_Gene_Set_Bon.csv",sep=",",row.names=F,quote=F)
 #
 # Write to Excel
@@ -1008,14 +943,14 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 DME_1_MVP<-fread("FUMA/DME_1_MVP/DropViz_L2/magma_celltype_step1.txt")
 DME_1<-fread("FUMA/DME_1/DropViz_L2/magma_celltype_step1.txt")
 MVP<-fread("FUMA/MVP/DropViz_L2/magma_celltype_step1.txt")
-Zhang<-fread("Replication/Zhang_to_Replication_DropViz_L2.csv")
+HEAL2<-fread("Replication/HEAL2_to_Replication_DropViz_L2.csv")
 #
 # Are there duplicated lines? All data tables?
 #
 setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
 setDT(DME_1);     DME_1     <- unique(DME_1)
 setDT(MVP);       MVP       <- unique(MVP)
-setDT(Zhang);     Zhang     <- unique(Zhang)
+setDT(HEAL2);     HEAL2     <- unique(HEAL2)
 #
 # Calculate P_bh and P_bon 
 #
@@ -1025,8 +960,8 @@ DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
 DME_1[, P_bh := p.adjust(P, method = "BH")]
 MVP[, P_bon := pmin(P * nrow(MVP), 1)]
 MVP[, P_bh := p.adjust(P, method = "BH")]
-Zhang[, P_bon := pmin(P * nrow(Zhang), 1)]
-Zhang[, P_bh := p.adjust(P, method = "BH")]
+HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+HEAL2[, P_bh := p.adjust(P, method = "BH")]
 #
 DME_1_MVP <- merge(DME_1_MVP, 
                    DME_1[, .(Cell_type, Dataset, 
@@ -1041,10 +976,9 @@ DME_1_MVP <- merge(DME_1_MVP,
                    by = c("Cell_type", "Dataset"), all.x = TRUE)
 
 DME_1_MVP <- merge(DME_1_MVP, 
-                   Zhang[, .(Cell_type, Dataset, 
-                             P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
-                             n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
-                             genes_Zhang = genes)], 
+                   HEAL2[, .(Cell_type, Dataset, 
+                             P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
+                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
                    by = c("Cell_type", "Dataset"), all.x = TRUE)
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE",
@@ -1053,8 +987,9 @@ DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE
                                                 "P_DME_1","P_bon_DME_1","P_bh_DME_1",
                                                 "BETA_MVP","SE_MVP",
                                                 "P_MVP","P_bon_MVP","P_bh_MVP",
-                                                "P_Zhang","P_bon_Zhang","P_bh_Zhang",
-                                                "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
+                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
+                                                "GeneRatio", "BgRatio", "FoldEnrichment",
+                                                "genes"))
 DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
 #
 # Write a table with only significant results (BH)
@@ -1063,9 +998,9 @@ step3<-fread("FUMA/DME_1_MVP/DropViz_L2_BH/step1_2_summary.txt")
 step3<-subset.data.frame(step3,step3==1)
 index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
 dt<-DME_1_MVP[index,]
-dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
 dt<-Annot_DV(dt) # Add DropViz annotations
-write.table(dt,"Table_DropViz_BH.csv",sep=",",row.names=F,quote=T)
+write.table(dt,"Table_DropViz_L2_BH.csv",sep=",",row.names=F,quote=T)
 #
 # Write a table with only significant results (Bonferroni + Step2)
 #
@@ -1073,9 +1008,9 @@ step3<-fread("FUMA/DME_1_MVP/DropViz_L2/step1_2_summary.txt")
 step3<-subset.data.frame(step3,step3==1)
 index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
 dt<-DME_1_MVP[index,]
-dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)] 
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
 dt<-Annot_DV(dt) # Add DropViz annotations
-write.table(dt,"Table_DropViz_Bon.csv",sep=",",row.names=F,quote=T)
+write.table(dt,"Table_DropViz_L2_Bon.csv",sep=",",row.names=F,quote=T)
 #
 # Load existing workbook
 #
@@ -1100,14 +1035,14 @@ saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 DME_1_MVP<-fread("FUMA/DME_1_MVP/Siletti_Seeker_L2/magma_celltype_step1.txt")
 DME_1<-fread("FUMA/DME_1/Siletti_Seeker_L2/magma_celltype_step1.txt")
 MVP<-fread("FUMA/MVP/Siletti_Seeker_L2/magma_celltype_step1.txt")
-Zhang<-fread("Replication/Zhang_to_Replication_Siletti_Seeker_L2.csv")
+HEAL2<-fread("Replication/HEAL2_to_Replication_Siletti_Seeker_L2.csv")
 #
 # Are there duplicated lines? All data tables?
 #
 setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
 setDT(DME_1);     DME_1     <- unique(DME_1)
 setDT(MVP);       MVP       <- unique(MVP)
-setDT(Zhang);     Zhang     <- unique(Zhang)
+setDT(HEAL2);     HEAL2     <- unique(HEAL2)
 #
 # Calculate P_bh and P_bon 
 #
@@ -1117,8 +1052,8 @@ DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
 DME_1[, P_bh := p.adjust(P, method = "BH")]
 MVP[, P_bon := pmin(P * nrow(MVP), 1)]
 MVP[, P_bh := p.adjust(P, method = "BH")]
-Zhang[, P_bon := pmin(P * nrow(Zhang), 1)]
-Zhang[, P_bh := p.adjust(P, method = "BH")]
+HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+HEAL2[, P_bh := p.adjust(P, method = "BH")]
 #
 DME_1_MVP <- merge(DME_1_MVP, 
                    DME_1[, .(Cell_type, Dataset, 
@@ -1133,10 +1068,9 @@ DME_1_MVP <- merge(DME_1_MVP,
                    by = c("Cell_type", "Dataset"), all.x = TRUE)
 
 DME_1_MVP <- merge(DME_1_MVP, 
-                   Zhang[, .(Cell_type, Dataset, 
-                             P_Zhang = P, P_bon_Zhang = P_bon, P_bh_Zhang = P_bh, 
-                             n_gene_set_Zhang = n_genes_set, n_overlap_Zhang = n_overlap, 
-                             genes_Zhang = genes)], 
+                   HEAL2[, .(Cell_type, Dataset, 
+                             P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
+                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
                    by = c("Cell_type", "Dataset"), all.x = TRUE)
 #
 DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE",
@@ -1145,8 +1079,9 @@ DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE
                                                 "P_DME_1","P_bon_DME_1","P_bh_DME_1",
                                                 "BETA_MVP","SE_MVP",
                                                 "P_MVP","P_bon_MVP","P_bh_MVP",
-                                                "P_Zhang","P_bon_Zhang","P_bh_Zhang",
-                                                "n_gene_set_Zhang","n_overlap_Zhang","genes_Zhang"))
+                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
+                                                "GeneRatio", "BgRatio", "FoldEnrichment",
+                                                "genes"))
 DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
 #
 # Write a table with only significant results
@@ -1156,12 +1091,12 @@ step3<-subset.data.frame(step3,step3==1)
 index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
 dt<-DME_1_MVP[index,]
 dt<-subset.data.frame(dt,P_bh<=0.05)
-dt[,P_bon_rep_Zhang:=pmin(P_Zhang*nrow(dt),1)]  
-write.table(dt,"Table_Siletti_Seeker_BH.csv",sep=",",row.names=F,quote=F)
+dt[,P_bon_rep_HEAL2:=pmin(P_HEAL2*nrow(dt),1)]  
+write.table(dt,"Table_Siletti_Seeker_L2_BH.csv",sep=",",row.names=F,quote=F)
 #
 dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-dt[, P_bon_rep_Zhang := pmin(P_Zhang * nrow(dt), 1)]  
-write.table(dt,"Table_Siletti_Seeker_Bon.csv",sep=",",row.names=F,quote=F)
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)]  
+write.table(dt,"Table_Siletti_Seeker_L2_Bon.csv",sep=",",row.names=F,quote=F)
 #
 # Load existing workbook
 #

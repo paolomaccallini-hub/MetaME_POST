@@ -6,6 +6,7 @@ library(data.table)
 library(MungeSumstats)
 library(yaml) 
 library(ggplot2) 
+library(scattermore)
 library(patchwork)
 #
 #-------------------------------------------------------------------------------
@@ -505,3 +506,162 @@ parse_munge_log <- function(log_file) {
   #
   return(list(rows=rows_after, gws=gws_after))
 }
+#
+#-------------------------------------------------------------------------------
+# This function calculate lambda and plot the QQ plot. It is inspired
+# by a function by Matti Pirinen - Chapter 6, page 7 of his GWAS lectures
+#-------------------------------------------------------------------------------
+#
+lambda_func<-function(mydata,name) {
+  #
+  # Calculate lambda 
+  #
+  expect.stats<-qchisq(ppoints(nrow(mydata)),df=1,lower.tail=FALSE)
+  obs.stats<-qchisq(mydata$P,df=1,lower.tail=FALSE)
+  lambda<-median(obs.stats)/median(expect.stats)
+  #
+  # Generate QQ plot for meta analysis: ChiSquared values
+  #
+  tiff(filename=paste0("Output/ChiSquared_QQ_",name,".tiff"),
+       width=7,height=7,units="in",res=300,compression="lzw")
+  #
+  par(mar = c(5, 5, 4, 2))
+  scattermoreplot(sort(expect.stats),sort(obs.stats),
+                  xlab = expression(Expected ~ chi[1]^2),
+                  ylab = expression(Observed ~ chi[1]^2),
+                  cex=5,col="black",xaxt="n",yaxt="n",
+                  cex.lab=1.3)
+  axis(1, at=seq(0, 30, by=2))
+  axis(2, at=seq(0, 50, by=5))
+  abline(0,1,lwd=2,col="red",lty=2)
+  legend("topleft",legend=bquote(lambda[GC]==.(signif(lambda, 3))),bty="n",cex=1.2)
+  dev.off()  
+  #
+  # Generate QQ plot for meta analysis: -Log10P
+  #
+  tiff(filename=paste0("Output/Log10P_QQ_",name,".tiff"),
+       width=7,height=7,units="in",res=300,compression="lzw")
+  #
+  par(mar = c(5, 5, 4, 2))
+  scattermoreplot(sort(-log10(ppoints(nrow(mydata)))),sort(-log10(mydata$P)),
+                  xlab = expression(Expected ~ -Log[10](P)),
+                  ylab = expression(Observed ~ -Log[10](P)),
+                  cex=5,col="black",xaxt="n",yaxt="n",
+                  cex.lab=1.3)
+  axis(1, at = seq(0,8,by=1))    
+  axis(2, at = seq(0,12,by=1))
+  abline(0,1,lwd=2,col="red",lty=2)
+  legend("topleft",legend=bquote(lambda[GC]==.(signif(lambda, 3))),bty="n",cex=1.2)
+  dev.off()  
+  #
+  # Return result
+  #
+  return(lambda)
+}
+#
+#-------------------------------------------------------------------------------
+# As lambda_func() but specific for meta analyses: it compares the meta gwas
+# with the component sumstats
+#-------------------------------------------------------------------------------
+#
+meta_lambda_func<-function(mydata,name) {
+  #
+  # retrieve composing sustats
+  #
+  names<-c()
+  h<-1
+  for (p in populations) {
+    if (grepl(p,name)) {
+      names[h]<-p
+      h<-h+1
+    }
+  }
+  #
+  # Vectors and lists
+  #
+  expect.stats<-list()
+  obs.stats<-list()
+  lambda<-c()
+  log10P<-list()
+  #
+  # Calculate lambda for meta analysis
+  #
+  expect.stats[[1]]<-qchisq(ppoints(nrow(mydata)),df=1,lower.tail=FALSE)
+  obs.stats[[1]]<-qchisq(mydata$P,df=1,lower.tail=FALSE)
+  lambda[1]<-median(obs.stats[[1]])/median(expect.stats[[1]])
+  log10P[[1]]<--log10(mydata$P)
+  #
+  # Calculate lambda for composing populations
+  #
+  for (k in 1:length(names)) {
+    #
+    # Read sumstat
+    #
+    file_name_gz<-paste0(current_dir,"/Munged/",names[k],"_GRCh37.tsv.gz")
+    mydata<-fread(file_name_gz)
+    expect.stats[[k+1]]<-qchisq(ppoints(nrow(mydata)),df=1,lower.tail=FALSE)
+    obs.stats[[k+1]]<-qchisq(mydata$P,df=1,lower.tail=FALSE)
+    lambda[k+1]<-median(obs.stats[[k+1]])/median(expect.stats[[k+1]])
+    log10P[[k+1]]<--log10(mydata$P)
+  }
+  #
+  # Generate QQ plot for meta analysis: ChiSquared values
+  #
+  tiff(filename=paste0("Output/ChiSquared_QQ_",name,".tiff"),
+       width=7,height=7,units="in",res=300,compression="lzw")
+  #
+  par(mar=c(5,5,4,2))
+  x_max<-max(sapply(expect.stats, max))
+  y_max<-max(sapply(obs.stats, max))
+  colors<-c("red","blue","forestgreen","darkorange","purple")
+  legends<-list()
+  lableg<-c("META",names)
+  plot(NULL,xlim=c(0,x_max),ylim=c(0,y_max),xlab=expression(Expected~chi[1]^2),
+       ylab=expression(Observed~chi[1]^2),xaxt="n",yaxt="n",cex.lab=1.3)
+  axis(1,at=seq(0,x_max,by=2))
+  axis(2,at=seq(0,y_max,by=5))
+  #
+  for (k in 1:length(obs.stats)) {
+    par(new=T)
+    scattermoreplot(sort(expect.stats[[k]]),sort(obs.stats[[k]]),cex=8,col=colors[k],
+                    xlab="",ylab="",xlim=c(0, x_max),ylim=c(0, y_max),xaxt="n",yaxt="n")
+    legends[[k]] <- bquote(lambda[.(lableg[k])] == .(signif(lambda[k],4)))
+  }
+  abline(0,1,lwd=2,col="black",lty=2)
+  legend("topleft",legend=legends,col=colors,lwd=5,bty="n",cex=1.3)
+  dev.off()
+  #
+  # Generate QQ plot for meta analysis: -Log10(P)
+  #
+  tiff(filename=paste0("Output/Log10P_QQ_",name,".tiff"),
+       width=7,height=7,units="in",res=300,compression="lzw")
+  #
+  par(mar=c(5,5,4,2))
+  x_max<-8
+  y_max<-max(sapply(log10P,max))
+  colors<-c("red","blue","forestgreen","darkorange","purple")
+  legends<-list()
+  lableg<-c("META",names)
+  plot(NULL,xlim=c(0,x_max),ylim=c(0,y_max),
+       xlab = expression(Expected ~ -Log[10](P)),
+       ylab = expression(Observed ~ -Log[10](P)),xaxt="n",yaxt="n",cex.lab=1.3)
+  axis(1,at=seq(0,x_max,by=1))
+  axis(2,at=seq(0,y_max,by=1))
+  #
+  for (k in 1:length(obs.stats)) {
+    par(new=T)
+    N<-length(log10P[[k]])
+    scattermoreplot(sort(-log10(ppoints(N))),sort(log10P[[k]]),
+                    cex=8,col=colors[k],ylab="",xlab="",
+                    xlim=c(0,x_max),ylim=c(0,y_max),xaxt="n",yaxt="n")
+    legends[[k]] <- bquote(lambda[.(lableg[k])] == .(signif(lambda[k],4)))
+  }
+  abline(0,1,lwd=2,col="black",lty=2)
+  legend("topleft",legend=legends,col=colors,lwd=5,bty="n",cex=1.3)
+  dev.off()
+  #
+  # Return result
+  #
+  return(lambda[1])
+}
+

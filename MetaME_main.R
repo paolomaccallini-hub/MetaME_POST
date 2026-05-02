@@ -1256,30 +1256,58 @@ for (i in 1:nrow(cohorts)) {
   cohorts$Neff[i]<-round(4*cohorts$N_cases[i]*cohorts$N_controls[i]/cohorts$N[i])
 }
 #
-# Retrieve number of genome-wide significant variants for cohorts
+# Retrieve number of genome-wide significant variants for cohorts, calculate lambda
+# print QQplot
 #
 cohorts$rows<-rep(NA,nrow(cohorts))
 cohorts$gws<-rep(NA,nrow(cohorts))
 for (i in 1:nrow(cohorts)) {
   file_name<-file.path("Munged",paste0(cohorts$Cohort[i],"_GRCh38_log_msg.txt"))
   if (file.exists(file_name)) {
+    #
+    # Retreive rows and gws variants
+    #
     results<-parse_munge_log(file_name)
     cohorts$rows[i]<-results$rows
     cohorts$gws[i]<-results$gws  
+    #
+    # Read sumstat
+    #
+    file_name_gz<-paste0(current_dir,"/Munged/",cohorts$Cohort[i],"_GRCh37.tsv.gz")
+    mydata<-fread(file_name_gz)
+    #
+    # Calculate lambda and plot QQplot
+    #
+    cohorts$lambda[i]<-lambda_func(mydata,name=cohorts$Cohort[i])
   }
 }
 #
-# Retrieve number of genome-wide significant variants for meta analyses
+# Retrieve number of genome-wide significant variants for meta analyses.
+# Calculate lambda
 #
 for (i in 1:nrow(meta_analyses)) {
-  file_name<-file.path("Output",paste0("GWAS_METAL_",meta_analyses$meta_analysis[i],
-                                       "_GRCh37_log_msg.txt"))
+  #
+  # Retrieve rows and gws variants
+  #
+  file_name<-file.path("Output",paste0("GWAS_METAL_",
+                                meta_analyses$meta_analysis[i],
+                                "_GRCh37_log_msg.txt"))
   results<-parse_munge_log(file_name)
   meta_analyses$rows[i]<-results$rows
   meta_analyses$gws[i]<-results$gws
+  #
+  # Read meta analysis
+  #
+  file_name<-paste0("Output/GWAS_METAL_",meta_analyses$meta_analysis[i],"_GRCh37.tsv.gz")
+  mydata<-fread(file_name,sep="\t")
+  #
+  # Calculate lambda and plot QQplot
+  #
+  meta_analyses$lambda[i]<-meta_lambda_func(mydata,name=meta_analyses$meta_analysis[i])
 }
 #
 # Save results 
 #
-write.table(meta_analyses[,c("meta_analysis","rows","gws")],"Meta_analyses_2.csv",sep=",",row.names = F)
-write.table(cohorts,"Cohorts.csv",sep=",",row.names = F)
+write.table(meta_analyses[,c("meta_analysis","rows","gws")],"Meta_analyses_2.csv",
+            sep=",",row.names=F)
+write.table(cohorts,"Cohorts.csv",sep=",",row.names=F)

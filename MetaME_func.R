@@ -123,7 +123,7 @@ DME_func<-function(sumstats) {
     # 
     mymunged<-fread(munge_path)
     test<-0
-    while(test<=30) {
+    while(test<=10000) {
       n1<-sample(c(1:nrow(mymunged)),1)
       n2<-which(mydata$CHROM==mymunged$CHR[n1]&mydata$GENPOS==mymunged$BP[n1])
       if (length(n2)==1) {
@@ -171,7 +171,7 @@ DME_func<-function(sumstats) {
       mydata<-fread(paste0("Munged/DME_",sumstats,"_GRCh38.tsv.gz"))
       mymunged<-fread(paste0("Munged/DME_",sumstats,"_GRCh37.tsv.gz"))
       test<-0
-      while(test<=30) {
+      while(test<=10000) {
         n1<-sample(c(1:nrow(mymunged)),1)
         n2<-which(mydata$SNP==mymunged$SNP[n1])
         if (length(n2)==1) {
@@ -357,7 +357,7 @@ UKBNL_func<-function(sumstats) {
     # 
     mymunged<-fread(munge_path)
     test<-0
-    while(test<=30) {
+    while(test<=10000) {
       n1<-sample(c(1:nrow(mymunged)),1)
       n2<-which(mydata$rsid==mymunged$SNP[n1])
       if (length(n2)==1) {
@@ -461,7 +461,7 @@ UKBNL_func<-function(sumstats) {
     # 
     mymunged<-fread(munge_path)
     test<-0
-    while(test<=30) {
+    while(test<=10000) {
       n1<-sample(c(1:nrow(mymunged)),1)
       n2<-which(mydata$rsid==mymunged$SNP[n1])
       if (length(n2)==1) {

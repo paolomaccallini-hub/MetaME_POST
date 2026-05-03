@@ -270,7 +270,7 @@ for (metaA in meta_analyses$meta_analysis) {
       # 
       mymunged<-fread(munge_path)
       test<-0
-      while(test<=30) {
+      while(test<=10000) {
         n1<-sample(c(1:nrow(mymunged)),1)
         n2<-which(mydata$variant_id==mymunged$SNP[n1])
         if (length(n2)==1) {
@@ -463,7 +463,7 @@ for (metaA in meta_analyses$meta_analysis) {
       # 
       mymunged<-fread(munge_path)
       test<-0
-      while(test<=300) {
+      while(test<=10000) {
         print(test)
         n1<-sample(c(1:nrow(mymunged)),1)
         n2<-which(mydata$rsid==mymunged$SNP[n1])
@@ -554,7 +554,7 @@ for (metaA in meta_analyses$meta_analysis) {
       # 
       mymunged<-fread(munge_path)
       test<-0
-      while(test<=300) {
+      while(test<=10000) {
         print(test)
         n1<-sample(c(1:nrow(mymunged)),1)
         n2<-which(mydata$rsid==mymunged$SNP[n1])
@@ -672,7 +672,7 @@ for (metaA in meta_analyses$meta_analysis) {
       # 
       mymunged<-fread(munge_path)
       test<-0
-      while(test<=30) {
+      while(test<=10000) {
         n1<-sample(c(1:nrow(mymunged)),1)
         n2<-which(mydata$SNP==mymunged$SNP[n1])
         if (length(n2)==1) {
@@ -788,7 +788,7 @@ for (metaA in meta_analyses$meta_analysis) {
       # 
       mymunged<-fread(munge_path)
       test<-0
-      while(test<=30) {
+      while(test<=10000) {
         n1<-sample(c(1:nrow(mymunged)),1)
         n2<-which(mydata$rsid==mymunged$SNP[n1])
         if (length(n2)==1) {
@@ -847,7 +847,7 @@ for (metaA in meta_analyses$meta_analysis) {
       # 
       mymunged<-fread(munge_path)
       test<-0
-      while(test<=30) {
+      while(test<=10000) {
         n1<-sample(c(1:nrow(mymunged)),1)
         n2<-which(mydata$rsid==mymunged$SNP[n1])
         if (length(n2)==1) {
@@ -1086,7 +1086,7 @@ for (metaA in meta_analyses$meta_analysis) {
     # 
     mymunged<-fread(munge_path)
     test<-0
-    while(test<=30) {
+    while(test<=10000) {
       n1<-sample(c(1:nrow(mymunged)),1)
       n2<-which(mydata$SNP==mymunged$SNP[n1])
       if (length(n2)==1) {
@@ -1120,7 +1120,7 @@ for (metaA in meta_analyses$meta_analysis) {
     # 
     mymunged<-fread(munge_path)
     test<-0
-    while(test<=30) {
+    while(test<=10000) {
       n1<-sample(c(1:nrow(mymunged)),1)
       n2<-which(mydata$SNP==mymunged$SNP[n1])
       if (length(n2)==1) {

@@ -773,87 +773,6 @@ freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
 #-------------------------------------------------------------------------------
-# Supplementary table: Tissue analysis
-#-------------------------------------------------------------------------------
-#
-DME_1_MVP<-read_magma_tissue("FUMA/DME_1_MVP/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
-DME_1<-read_magma_tissue("FUMA/DME_1/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
-MVP<-read_magma_tissue("FUMA/MVP/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
-HEAL2<-fread("Replication/HEAL2_to_Replication_Tissue.csv")
-#
-# Are there duplicated lines? All data tables?
-#
-setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
-setDT(DME_1);     DME_1     <- unique(DME_1)
-setDT(MVP);       MVP       <- unique(MVP)
-setDT(HEAL2);     HEAL2     <- unique(HEAL2)
-#
-# Calculate P_bh and P_bon 
-#
-DME_1_MVP[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
-DME_1_MVP[, P_bh := p.adjust(P, method = "BH")]
-DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
-DME_1[, P_bh := p.adjust(P, method = "BH")]
-MVP[, P_bon := pmin(P * nrow(MVP), 1)]
-MVP[, P_bh := p.adjust(P, method = "BH")]
-HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
-HEAL2[, P_bh := p.adjust(P, method = "BH")]
-#
-DME_1_MVP <- merge(DME_1_MVP, 
-                   DME_1[, .(FULL_NAME, BETA_DME_1 = BETA, SE_DME_1 = SE, 
-                             P_DME_1 = P, P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
-                   by = "FULL_NAME", all.x = TRUE)
-
-DME_1_MVP <- merge(DME_1_MVP, 
-                   MVP[, .(FULL_NAME, BETA_MVP = BETA, SE_MVP = SE, 
-                           P_MVP = P, P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
-                   by = "FULL_NAME", all.x = TRUE)
-
-DME_1_MVP <- merge(DME_1_MVP, 
-                   HEAL2[, .(FULL_NAME, P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
-                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
-                   by = "FULL_NAME", all.x = TRUE)
-#
-DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE",
-                                                "P","P_bon","P_bh",
-                                                "BETA_DME_1","SE_DME_1",
-                                                "P_DME_1","P_bon_DME_1","P_bh_DME_1",
-                                                "BETA_MVP","SE_MVP",
-                                                "P_MVP","P_bon_MVP","P_bh_MVP",
-                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
-                                                "GeneRatio", "BgRatio", "FoldEnrichment",
-                                                "genes"))
-DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
-#
-# Write a table with only significant results (BH)
-#
-dt<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
-dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
-write.table(dt,"Table_Tissue_BH.csv",sep=",",row.names=F,quote=F)
-#
-# Write a table with only significant results (Bon)
-#
-dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
-dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
-write.table(dt,"Table_Tissue_Bon.csv",sep=",",row.names=F,quote=F)
-#
-# Load existing workbook
-#
-wb<-loadWorkbook(paste0(wb_name,".xlsx"))
-sheet_name<-"S4 Tissue Analysis" # name the sheet
-myresult<-DME_1_MVP
-#
-addWorksheet(wb,sheet_name)
-writeData(wb,sheet_name,myresult)
-addFilter(wb,sheet_name,row=1,cols=1:ncol(myresult))
-addStyle(wb,sheet_name,
-         createStyle(textDecoration ="bold",border="Bottom"),
-         rows=1,cols=1:ncol(myresult))
-setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
-freezePane(wb,sheet_name,firstRow=T)
-saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
-#
-#-------------------------------------------------------------------------------
 # Supplementary table: Gene Set analyses
 #-------------------------------------------------------------------------------
 #
@@ -877,7 +796,7 @@ DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
 DME_1[, P_bh := p.adjust(P, method = "BH")]
 MVP[, P_bon := pmin(P * nrow(MVP), 1)]
 MVP[, P_bh := p.adjust(P, method = "BH")]
-HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+HEAL2[, P_bon := pmin(P * nrow(HEAL2), 1)]
 HEAL2[, P_bh := p.adjust(P, method = "BH")]
 #
 # Sequential Merges (Left Joins)
@@ -937,6 +856,87 @@ freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
 #-------------------------------------------------------------------------------
+# Supplementary table: Tissue analysis
+#-------------------------------------------------------------------------------
+#
+DME_1_MVP<-read_magma_tissue("FUMA/DME_1_MVP/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
+DME_1<-read_magma_tissue("FUMA/DME_1/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
+MVP<-read_magma_tissue("FUMA/MVP/MAGMA/magma_exp_gtex_v8_ts_avg_log2TPM.gsa.out")
+HEAL2<-fread("Replication/HEAL2_to_Replication_Tissue.csv")
+#
+# Are there duplicated lines? All data tables?
+#
+setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
+setDT(DME_1);     DME_1     <- unique(DME_1)
+setDT(MVP);       MVP       <- unique(MVP)
+setDT(HEAL2);     HEAL2     <- unique(HEAL2)
+#
+# Calculate P_bh and P_bon 
+#
+DME_1_MVP[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+DME_1_MVP[, P_bh := p.adjust(P, method = "BH")]
+DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
+DME_1[, P_bh := p.adjust(P, method = "BH")]
+MVP[, P_bon := pmin(P * nrow(MVP), 1)]
+MVP[, P_bh := p.adjust(P, method = "BH")]
+HEAL2[, P_bon := pmin(P * nrow(HEAL2), 1)]
+HEAL2[, P_bh := p.adjust(P, method = "BH")]
+#
+DME_1_MVP <- merge(DME_1_MVP, 
+                   DME_1[, .(FULL_NAME, BETA_DME_1 = BETA, SE_DME_1 = SE, 
+                             P_DME_1 = P, P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
+                   by = "FULL_NAME", all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   MVP[, .(FULL_NAME, BETA_MVP = BETA, SE_MVP = SE, 
+                           P_MVP = P, P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
+                   by = "FULL_NAME", all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   HEAL2[, .(FULL_NAME, P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
+                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
+                   by = "FULL_NAME", all.x = TRUE)
+#
+DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("FULL_NAME","NGENES","BETA","SE",
+                                                "P","P_bon","P_bh",
+                                                "BETA_DME_1","SE_DME_1",
+                                                "P_DME_1","P_bon_DME_1","P_bh_DME_1",
+                                                "BETA_MVP","SE_MVP",
+                                                "P_MVP","P_bon_MVP","P_bh_MVP",
+                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
+                                                "GeneRatio", "BgRatio", "FoldEnrichment",
+                                                "genes"))
+DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
+#
+# Write a table with only significant results (BH)
+#
+dt<-subset.data.frame(DME_1_MVP,P_bh<=0.05)
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
+write.table(dt,"Table_Tissue_BH.csv",sep=",",row.names=F,quote=F)
+#
+# Write a table with only significant results (Bon)
+#
+dt<-subset.data.frame(DME_1_MVP,P_bon<=0.05)
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
+write.table(dt,"Table_Tissue_Bon.csv",sep=",",row.names=F,quote=F)
+#
+# Load existing workbook
+#
+wb<-loadWorkbook(paste0(wb_name,".xlsx"))
+sheet_name<-"S4 Tissue Analysis" # name the sheet
+myresult<-DME_1_MVP
+#
+addWorksheet(wb,sheet_name)
+writeData(wb,sheet_name,myresult)
+addFilter(wb,sheet_name,row=1,cols=1:ncol(myresult))
+addStyle(wb,sheet_name,
+         createStyle(textDecoration ="bold",border="Bottom"),
+         rows=1,cols=1:ncol(myresult))
+setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
+freezePane(wb,sheet_name,firstRow=T)
+saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
+#
+#-------------------------------------------------------------------------------
 # Supplementary table: DropViz L2
 #-------------------------------------------------------------------------------
 #
@@ -960,7 +960,7 @@ DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
 DME_1[, P_bh := p.adjust(P, method = "BH")]
 MVP[, P_bon := pmin(P * nrow(MVP), 1)]
 MVP[, P_bh := p.adjust(P, method = "BH")]
-HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+HEAL2[, P_bon := pmin(P * nrow(HEAL2), 1)]
 HEAL2[, P_bh := p.adjust(P, method = "BH")]
 #
 DME_1_MVP <- merge(DME_1_MVP, 
@@ -1052,7 +1052,7 @@ DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
 DME_1[, P_bh := p.adjust(P, method = "BH")]
 MVP[, P_bon := pmin(P * nrow(MVP), 1)]
 MVP[, P_bh := p.adjust(P, method = "BH")]
-HEAL2[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+HEAL2[, P_bon := pmin(P * nrow(HEAL2), 1)]
 HEAL2[, P_bh := p.adjust(P, method = "BH")]
 #
 DME_1_MVP <- merge(DME_1_MVP, 

@@ -1146,13 +1146,13 @@ for (metaA in meta_analyses$meta_analysis) {
     # Read meta-analysis
     #
     file_name<-paste0(current_dir,"/Output/GWAS_METAL_",paste0(populations,collapse="_"),
-                      "_GRCh38.tsv.gz")
+                      "_GRCh37.tsv.gz")
     mydata<-fread(file_name,sep="\t")
     #
     # Find best SNPs in meta analysis
     #
     mybest<-list()
-    n.best<-9
+    n.best<-4
     setorder(mydata,P)
     mybest[[1]]<-mydata[1:n.best,]
     names(mybest)[1]<-"METAL"
@@ -1161,7 +1161,7 @@ for (metaA in meta_analyses$meta_analysis) {
     # Recover the best SNPs from the input GWAS
     #
     for (i in 1:length(populations)) {
-      file_name_gz<-paste0(current_dir,"/Munged/",populations[i],"_GRCh38.tsv.gz")
+      file_name_gz<-paste0(current_dir,"/Munged/",populations[i],"_GRCh37.tsv.gz")
       mydata<-fread(file_name_gz)
       df<-mybest[[1]][,c("SNP","A1","A2")]
       mybest[[1+i]]<-merge(mydata,df,by=c("SNP","A1","A2"),all.x=F)
@@ -1199,45 +1199,29 @@ for (metaA in meta_analyses$meta_analysis) {
       # build plot 
       #
       plots[[i]]<-ggplot(Zeta,aes(x=name,y=Z)) +
-        geom_hline(yintercept=0,linetype="dashed",colour="black",linewidth=0.8) +
-        geom_segment(aes(x=name,xend=name,y=0,yend=Z)) +
-        geom_point(size=4) +
-        labs(x=NULL,y="Z-score") +
-        labs(title=variant) +
+        geom_hline(yintercept=0,linetype="dashed",colour="black",linewidth=1.5) +
+        geom_segment(aes(x=name,xend=name,y=0,yend=Z),linewidth=1.5) +
+        geom_point(size=12) + labs(x=NULL,y="Z-score") + labs(title=variant) +
         #
         # Add FRQ
         #
-        geom_text(
-          aes(label = sprintf("%.3f", FRQ)),
-          vjust = -1.2,
-          color = "blue",
-          size = 4
-        ) +
+        geom_text(aes(label=sprintf("%.3f", FRQ)),hjust=0.8,vjust=-2.0,color="blue",size=14) +
         #
         # Add Neff
         #
-        geom_text(
-          aes(label = format(round(Neff), big.mark = ",")),
-          vjust = 1.8,
-          color = "darkred",
-          size = 4
-        ) +
-        
-        theme_grey(base_size=14) +
-        coord_flip() +
-        theme(
-          plot.title=element_text(size=14,hjust=0.5),
-          axis.title.x=element_text(size=16),
-          axis.text=element_text(size=16)
+        geom_text(aes(label=format(round(Neff),big.mark=",")),hjust=0.8,vjust=2.5,color="darkred",size=14) +
+        theme_grey(base_size=32) + coord_flip() +
+        theme(plot.title=element_text(size=35,hjust=0.5),axis.title.x=element_text(size=35),
+          axis.text=element_text(size=35)
         )
     }
     #
     # Plot results
     #
     file_name<-paste0(current_dir,"/Output/GWAS_METAL_",paste0(populations,collapse="_"),
-                      "_GRCh38.pdf")
-    pdf(file_name,width=20,height=20)
-    print(wrap_plots(plots,ncol=3))
+                      "_GRCh37.pdf")
+    pdf(file_name,width=25,height=25)
+    print(wrap_plots(plots,ncol=2))
     dev.off()
   }
 }

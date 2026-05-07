@@ -758,7 +758,7 @@ for (metaA in meta_analyses$meta_analysis) {
       #
       # Read summary statistics
       #
-      file_name<-"Data/LC/GCST90454542.tsv.gz" 
+      file_name<-"Data/LC/GCST90454541.tsv.gz" 
       #
       mydata<-fread(file_name,header=T,sep="\t")
       head(mydata)

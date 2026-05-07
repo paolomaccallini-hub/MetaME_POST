@@ -1261,6 +1261,7 @@ for (i in 1:nrow(cohorts)) {
 #
 cohorts$rows<-rep(NA,nrow(cohorts))
 cohorts$gws<-rep(NA,nrow(cohorts))
+cohorts$lambda<-rep(NA,nrow(cohorts))
 for (i in 1:nrow(cohorts)) {
   file_name<-file.path("Munged",paste0(cohorts$Cohort[i],"_GRCh38_log_msg.txt"))
   if (file.exists(file_name)) {
@@ -1285,13 +1286,14 @@ for (i in 1:nrow(cohorts)) {
 # Retrieve number of genome-wide significant variants for meta analyses.
 # Calculate lambda
 #
+meta_analyses$rows<-rep(NA,nrow(meta_analyses))
+meta_analyses$gws<-rep(NA,nrow(meta_analyses))
+meta_analyses$lambda<-rep(NA,nrow(meta_analyses))
 for (i in 1:nrow(meta_analyses)) {
   #
   # Retrieve rows and gws variants
   #
-  file_name<-file.path("Output",paste0("GWAS_METAL_",
-                                meta_analyses$meta_analysis[i],
-                                "_GRCh37_log_msg.txt"))
+  file_name<-file.path("Output",paste0("GWAS_METAL_",meta_analyses$meta_analysis[i],"_GRCh37_log_msg.txt"))
   results<-parse_munge_log(file_name)
   meta_analyses$rows[i]<-results$rows
   meta_analyses$gws[i]<-results$gws
@@ -1308,6 +1310,5 @@ for (i in 1:nrow(meta_analyses)) {
 #
 # Save results 
 #
-write.table(meta_analyses[,c("meta_analysis","rows","gws")],"Meta_analyses_2.csv",
-            sep=",",row.names=F)
+write.table(meta_analyses[,c("meta_analysis","rows","gws")],"Meta_analyses_2.csv",sep=",",row.names=F)
 write.table(cohorts,"Cohorts.csv",sep=",",row.names=F)

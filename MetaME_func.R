@@ -566,16 +566,13 @@ lambda_func<-function(mydata,name) {
 #
 meta_lambda_func<-function(mydata,name) {
   #
-  # retrieve composing sustats
+  # Search composing populatins
   #
   names<-c()
-  h<-1
-  for (p in populations) {
-    if (grepl(p,name)) {
-      names[h]<-p
-      h<-h+1
-    }
-  }
+  index<-which(meta_analyses$meta_analysis==name)
+  df<-meta_analyses[index,]
+  index<-which(df[1,]==1)
+  names<-colnames(df[1,index])
   #
   # Vectors and lists
   #

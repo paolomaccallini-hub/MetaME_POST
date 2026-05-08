@@ -746,7 +746,8 @@ mydata<-fread(file_name,sep="\t")
 mybest<-list()
 index<-which(mydata$SNP%in%myriskloci$rsID)
 mybest[[1]]<-mydata[index,]
-names(mybest)[1]<-"METAL"
+mybest[[1]]<-mybest[[1]][match(myriskloci$rsID,mybest[[1]]$SNP),] # match order
+names(mybest)[1]<-"DME_1"
 #
 # Recover the best SNPs from the meta analysis and MVP
 #
@@ -767,24 +768,52 @@ mybest[[1+i]]<-mybest[[1+i]][mybest[[1]]$SNP,on="SNP"] # ask for the same order 
 names(mybest)[1+i]<-"MVP"
 remove(mydata)
 #
+# Recover GRCh37 coordinates (I discovered that FUMA flips some alleles)
+#
+file_name<-paste0(current_dir,"/Munged/DME_1_GRCh37.tsv.gz")
+mydata<-fread(file_name,sep="\t")
+index<-which(mydata$SNP%in%myriskloci$rsID)
+mybest_GRCh37<-mydata[index,]
+mybest_GRCh37<-mybest_GRCh37[match(myriskloci$rsID,mybest_GRCh37$SNP),] # match order
+for (i in 1:nrow(mybest_GRCh37)) {
+  mybest_GRCh37$GRCh37[i]<-paste0(c(mybest_GRCh37$CHR[i],mybest_GRCh37$BP[i],mybest_GRCh37$A1[i],mybest_GRCh37$A2[i]),collapse=":")
+}
+#
 # Build a custom table for risk loci
 #
 myRL<-data.frame(topLeadSNP=myriskloci$rsID)
 for (i in 1:nrow(myRL)) {
   myRL$GRCh38[i]<-paste0(c(mybest[[1]]$CHR[i],mybest[[1]]$BP[i],mybest[[1]]$A1[i],mybest[[1]]$A2[i]),collapse=":")
 }
-myRL$GRCh37<-myriskloci$uniqID
+myRL$GRCh37<-mybest_GRCh37$GRCh37
 myRL$start<-myriskloci$start
 myRL$end<-myriskloci$end
 myRL$DME_1_Z<-mybest[[1]]$Z
-myRL$DME_1_MAF<-mybest[[1]]$FRQ
+myRL$DME_1_FRQ<-mybest[[1]]$FRQ
 myRL$DME_1_Log10P<-round(-log10(mybest[[1]]$P),2)
 myRL$META_Z<-mybest[[2]]$Z
-myRL$META_MAF<-mybest[[2]]$FRQ
+myRL$META_FRQ<-mybest[[2]]$FRQ
 myRL$META_Log10P<-round(-log10(mybest[[2]]$P),2)
 myRL$MVP_Z<-mybest[[3]]$Z
-myRL$MVP_MAF<-mybest[[3]]$FRQ
+myRL$MVP_FRQ<-mybest[[3]]$FRQ
 myRL$MVP_Log10P<-round(-log10(mybest[[3]]$P),2)
+#
+# Check allele flipping GRCh37 vs GRCh38
+#
+for (i in 1:nrow(myRL)) {
+  vector37<-str_split(myRL$GRCh37[i],":")[[1]]
+  vector38<-str_split(myRL$GRCh38[i],":")[[1]]
+  if (vector37[4]==vector38[3]) {
+    myRL$META_Z[i]<--myRL$META_Z[i]
+    myRL$DME_1_Z[i]<--myRL$DME_1_Z[i]
+    myRL$MVP_Z[i]<--myRL$MVP_Z[i]
+    myRL$META_FRQ[i]<-1-myRL$META_FRQ[i]
+    myRL$DME_1_FRQ[i]<-1-myRL$DME_1_FRQ[i]
+    myRL$MVP_FRQ[i]<-1-myRL$MVP_FRQ[i]
+  } else if (vector37[3]!=vector38[3]) {
+    stop("There an allele mismatch between GRCh37 and GRCh38!")
+  }
+}
 #
 # Write to Excel
 #

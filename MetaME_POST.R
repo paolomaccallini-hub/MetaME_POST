@@ -413,18 +413,18 @@ readme <- data.frame(
     "Table S1",
     #---------------------------------------------------------------------------
     "topLeadSNP", "GRCh38", "GRCh37", "start", "end",
-    "META_Z", "META_MAF", "META_Log10P",
-    "DME_1_Z", "DME_1_MAF", "DME_1_Log10P",
-    "MVP_Z", "MVP_MAF", "MVP_Log10P",
+    "META_Z", "META_FRQ", "META_Log10P",
+    "DME_1_Z", "DME_1_FRQ", "DME_1_Log10P",
+    "MVP_Z", "MVP_FRQ", "MVP_Log10P",
     "IndSigSNPs",
     "",
     #---------------------------------------------------------------------------
     "Table S2",
     #---------------------------------------------------------------------------
     "topLeadSNP", "GRCh38", "GRCh37", "start", "end",
-    "DME_1_Z", "DME_1_MAF", "DME_1_Log10P",
-    "META_Z", "META_MAF", "META_Log10P",
-    "MVP_Z", "MVP_MAF", "MVP_Log10P",
+    "DME_1_Z", "DME_1_FRQ", "DME_1_Log10P",
+    "META_Z", "META_FRQ", "META_Log10P",
+    "MVP_Z", "MVP_FRQ", "MVP_Log10P",
     "",
     #---------------------------------------------------------------------------
     "Table S3",

@@ -159,10 +159,12 @@ Annot_DV<-function(dt) {
       dt$class_marker[i]<-DropViz_anno$class_marker[index]
       dt$type_marker[i]<-DropViz_anno$type_marker[index]
       dt$common_name[i]<-DropViz_anno$common_name[index]
+      dt$subcluster[i]<-DropViz_anno$subcluster[index]
     } else {
       dt$class_marker[i]<-NA
       dt$type_marker[i]<-NA
       dt$common_name[i]<-NA
+      dt$subcluster[i]<-NA
     }
   }
   return(dt)
@@ -459,6 +461,7 @@ readme <- data.frame(
     "BETA_MVP", "SE_MVP", "P_MVP", "P_bon_MVP", "P_bh_MVP",
     "P_HEAL2", "P_bon_HEAL2", "P_bh_HEAL2",
     "GeneRatio", "BgRatio", "FoldEnrichment", "genes",
+    "class_marker","type_marker","common_name","subcluster",
     ""
   ),
   Description = c(
@@ -519,7 +522,7 @@ readme <- data.frame(
     "Raw P-value (MVP alone)",
     "Bonferroni-corrected P-value (MVP alone)",
     "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against the gene set; background: 17,759 STRING network genes",
+    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against the gene set; background: 17,759 genes",
     "Bonferroni-corrected P-value for HEAL2 ORA",
     "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
     "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
@@ -528,7 +531,7 @@ readme <- data.frame(
     "IDs of overlapping genes",
     "",
     #---------------------------------------------------------------------------
-    "MAGMA gene-tissue expression analysis (GTEx v8; 54 tissues; 17,280 genes). All 54 tissues shown.",
+    "MAGMA gene-tissue expression analysis (GTEx v8; 54 tissues).",
     #---------------------------------------------------------------------------
     "Full tissue name from GTEx v8",
     "Number of genes tested (17,280 for all tissues)",
@@ -547,8 +550,36 @@ readme <- data.frame(
     "Raw P-value (MVP alone)",
     "Bonferroni-corrected P-value (MVP alone; k=54)",
     "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against upregulated genes per tissue (gtex_v8_ts_DEG.txt); background: 17,759 STRING network genes",
+    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against upregulated genes per tissue (gtex_v8_ts_DEG.txt); background: 17,759 genes",
     "Bonferroni-corrected P-value for HEAL2 ORA (k=54)",
+    "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
+    "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
+    "nuber of genes of the gene set in background/number of genes in background",
+    "GeneRatio/BgRatio",
+    "IDs of overlapping genes",
+    "",
+    #---------------------------------------------------------------------------
+    "FUMA cell-type analysis, Siletti et al. (2023) + Seeker et al. (2023) human brain atlases (107 datasets; level-2 resolution; 2,082 cell types total). All tested cell types shown.",
+    #---------------------------------------------------------------------------
+    "Dataset identifier (Siletti or Seeker dissection label)",
+    "Cell type label at level-2 resolution",
+    "MAGMA regression coefficient (DME-1+MVP meta-analysis)",
+    "Standard error of the regression coefficient (DME-1+MVP meta-analysis)",
+    "Raw P-value from step 1 of the FUMA cell-type pipeline (DME-1+MVP meta-analysis)",
+    "Bonferroni-corrected P-value (DME-1+MVP meta-analysis, all cell types across all Siletti/Seeker datasets)",
+    "Benjamini-Hochberg-adjusted P-value (DME-1+MVP meta-analysis)",
+    "MAGMA regression coefficient (DME-1 alone)",
+    "Standard error (DME-1 alone)",
+    "Raw P-value (DME-1 alone)",
+    "Bonferroni-corrected P-value (DME-1 alone)",
+    "Benjamini-Hochberg-adjusted P-value (DME-1 alone)",
+    "MAGMA regression coefficient (MVP alone)",
+    "Standard error (MVP alone)",
+    "Raw P-value (MVP alone)",
+    "Bonferroni-corrected P-value (MVP alone)",
+    "Benjamini-Hochberg-adjusted P-value (MVP alone)",
+    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
+    "Bonferroni-corrected P-value for HEAL2 ORA",
     "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
     "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
     "nuber of genes of the gene set in background/number of genes in background",
@@ -575,41 +606,17 @@ readme <- data.frame(
     "Raw P-value (MVP alone)",
     "Bonferroni-corrected P-value (MVP alone)",
     "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
+    "Raw P-value from ORA of 115 HEAL2 ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
     "Bonferroni-corrected P-value for HEAL2 ORA (k=565)",
     "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
     "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
-    "nuber of genes of the gene set in background/number of genes in background",
+    "number of genes of the gene set in background/number of genes in background",
     "GeneRatio/BgRatio",
     "IDs of overlapping genes",
-    "",
-    #---------------------------------------------------------------------------
-    "FUMA cell-type analysis, Siletti et al. (2023) + Seeker et al. (2023) human brain atlases (107 datasets; level-2 resolution; 2,099 cell types total). All tested cell types shown.",
-    #---------------------------------------------------------------------------
-    "Dataset identifier (Siletti or Seeker dissection label)",
-    "Cell type label at level-2 resolution",
-    "MAGMA regression coefficient (DME-1+MVP meta-analysis)",
-    "Standard error of the regression coefficient (DME-1+MVP meta-analysis)",
-    "Raw P-value from step 1 of the FUMA cell-type pipeline (DME-1+MVP meta-analysis)",
-    "Bonferroni-corrected P-value (DME-1+MVP meta-analysis, all cell types across all Siletti/Seeker datasets)",
-    "Benjamini-Hochberg-adjusted P-value (DME-1+MVP meta-analysis)",
-    "MAGMA regression coefficient (DME-1 alone)",
-    "Standard error (DME-1 alone)",
-    "Raw P-value (DME-1 alone)",
-    "Bonferroni-corrected P-value (DME-1 alone)",
-    "Benjamini-Hochberg-adjusted P-value (DME-1 alone)",
-    "MAGMA regression coefficient (MVP alone)",
-    "Standard error (MVP alone)",
-    "Raw P-value (MVP alone)",
-    "Bonferroni-corrected P-value (MVP alone)",
-    "Benjamini-Hochberg-adjusted P-value (MVP alone)",
-    "Raw P-value from ORA of 115 HEAL2 et al. (2025) ME/CFS candidate genes against cell-type foreground gene set; background: 17,759 STRING network genes",
-    "Bonferroni-corrected P-value for HEAL2 ORA",
-    "Benjamini-Hochberg-adjusted P-value for HEAL2 ORA",
-    "number of HEAL2 genes in the gene set/number of HEAL2 genes in background",
-    "nuber of genes of the gene set in background/number of genes in background",
-    "GeneRatio/BgRatio",
-    "IDs of overlapping genes",
+    "Class marker defining the broad neurotransmitter identity of the cell type (DropViz nomenclature; e.g. Gad1Gad2: GABAergic; Slc17a6/VGluT2 and Slc17a7/VGluT1: glutamatergic)",
+    "Type marker defining the specific subtype within the class (DropViz nomenclature)",
+    "Curator-assigned common name from the DropViz web portal",
+    "DropViz subcluster identifier (global cluster - subcluster number)",
     ""
   ),
   stringsAsFactors = FALSE
@@ -995,98 +1002,6 @@ freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
 #
 #-------------------------------------------------------------------------------
-# Supplementary table: DropViz L2
-#-------------------------------------------------------------------------------
-#
-DME_1_MVP<-fread("FUMA/DME_1_MVP/DropViz_L2/magma_celltype_step1.txt")
-DME_1<-fread("FUMA/DME_1/DropViz_L2/magma_celltype_step1.txt")
-MVP<-fread("FUMA/MVP/DropViz_L2/magma_celltype_step1.txt")
-HEAL2<-fread("Replication/HEAL2_to_Replication_DropViz_L2.csv")
-#
-# Are there duplicated lines? All data tables?
-#
-setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
-setDT(DME_1);     DME_1     <- unique(DME_1)
-setDT(MVP);       MVP       <- unique(MVP)
-setDT(HEAL2);     HEAL2     <- unique(HEAL2)
-#
-# Calculate P_bh and P_bon 
-#
-DME_1_MVP[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
-DME_1_MVP[, P_bh := p.adjust(P, method = "BH")]
-DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
-DME_1[, P_bh := p.adjust(P, method = "BH")]
-MVP[, P_bon := pmin(P * nrow(MVP), 1)]
-MVP[, P_bh := p.adjust(P, method = "BH")]
-HEAL2[, P_bon := pmin(P * nrow(HEAL2), 1)]
-HEAL2[, P_bh := p.adjust(P, method = "BH")]
-#
-DME_1_MVP <- merge(DME_1_MVP, 
-                   DME_1[, .(Cell_type, Dataset, 
-                             BETA_DME_1 = BETA, SE_DME_1 = SE, P_DME_1 = P, 
-                             P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
-                   by = c("Cell_type", "Dataset"), all.x = TRUE)
-
-DME_1_MVP <- merge(DME_1_MVP, 
-                   MVP[, .(Cell_type, Dataset, 
-                           BETA_MVP = BETA, SE_MVP = SE, P_MVP = P, 
-                           P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
-                   by = c("Cell_type", "Dataset"), all.x = TRUE)
-
-DME_1_MVP <- merge(DME_1_MVP, 
-                   HEAL2[, .(Cell_type, Dataset, 
-                             P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
-                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
-                   by = c("Cell_type", "Dataset"), all.x = TRUE)
-#
-DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE",
-                                                "P","P_bon","P_bh",
-                                                "BETA_DME_1","SE_DME_1",
-                                                "P_DME_1","P_bon_DME_1","P_bh_DME_1",
-                                                "BETA_MVP","SE_MVP",
-                                                "P_MVP","P_bon_MVP","P_bh_MVP",
-                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
-                                                "GeneRatio", "BgRatio", "FoldEnrichment",
-                                                "genes"))
-DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
-#
-# Write a table with only significant results (BH)
-#
-step3<-fread("FUMA/DME_1_MVP/DropViz_L2_BH/step1_2_summary.txt")
-step3<-subset.data.frame(step3,step3==1)
-index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
-dt<-DME_1_MVP[index,]
-dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
-dt<-Annot_DV(dt) # Add DropViz annotations
-write.table(dt,"Table_DropViz_L2_BH.csv",sep=",",row.names=F,quote=T)
-#
-# Write a table with only significant results (Bonferroni + Step2)
-#
-step3<-fread("FUMA/DME_1_MVP/DropViz_L2/step1_2_summary.txt")
-step3<-subset.data.frame(step3,step3==1)
-index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
-dt<-DME_1_MVP[index,]
-dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
-dt<-Annot_DV(dt) # Add DropViz annotations
-write.table(dt,"Table_DropViz_L2_Bon.csv",sep=",",row.names=F,quote=T)
-#
-# Load existing workbook
-#
-wb<-loadWorkbook(paste0(wb_name,".xlsx"))
-sheet_name<-"S5 DropViz L2 Analysis" # name the sheet
-myresult<-DME_1_MVP
-#
-addWorksheet(wb,sheet_name)
-writeData(wb,sheet_name,myresult)
-addFilter(wb,sheet_name,row=1,cols=1:ncol(myresult))
-addStyle(wb,sheet_name,
-         createStyle(textDecoration ="bold",border="Bottom"),
-         rows=1,cols=1:ncol(myresult))
-setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
-freezePane(wb,sheet_name,firstRow=T)
-saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
-#
-#-------------------------------------------------------------------------------
 # Supplementary table: Siletti_Seeker L2
 #-------------------------------------------------------------------------------
 #
@@ -1159,7 +1074,7 @@ write.table(dt,"Table_Siletti_Seeker_L2_Bon.csv",sep=",",row.names=F,quote=F)
 # Load existing workbook
 #
 wb<-loadWorkbook(paste0(wb_name,".xlsx"))
-sheet_name<-"S6 Siletti Seeker L2 Analysis" # name the sheet
+sheet_name<-"S5 Siletti Seeker L2 Analysis" # name the sheet
 myresult<-DME_1_MVP
 #
 addWorksheet(wb,sheet_name)
@@ -1171,4 +1086,97 @@ addStyle(wb,sheet_name,
 setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
 freezePane(wb,sheet_name,firstRow=T)
 saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)
+#
+#-------------------------------------------------------------------------------
+# Supplementary table: DropViz L2
+#-------------------------------------------------------------------------------
+#
+DME_1_MVP<-fread("FUMA/DME_1_MVP/DropViz_L2/magma_celltype_step1.txt")
+DME_1<-fread("FUMA/DME_1/DropViz_L2/magma_celltype_step1.txt")
+MVP<-fread("FUMA/MVP/DropViz_L2/magma_celltype_step1.txt")
+HEAL2<-fread("Replication/HEAL2_to_Replication_DropViz_L2.csv")
+#
+# Are there duplicated lines? All data tables?
+#
+setDT(DME_1_MVP); DME_1_MVP <- unique(DME_1_MVP)
+setDT(DME_1);     DME_1     <- unique(DME_1)
+setDT(MVP);       MVP       <- unique(MVP)
+setDT(HEAL2);     HEAL2     <- unique(HEAL2)
+#
+# Calculate P_bh and P_bon 
+#
+DME_1_MVP[, P_bon := pmin(P * nrow(DME_1_MVP), 1)]
+DME_1_MVP[, P_bh := p.adjust(P, method = "BH")]
+DME_1[, P_bon := pmin(P * nrow(DME_1), 1)]
+DME_1[, P_bh := p.adjust(P, method = "BH")]
+MVP[, P_bon := pmin(P * nrow(MVP), 1)]
+MVP[, P_bh := p.adjust(P, method = "BH")]
+HEAL2[, P_bon := pmin(P * nrow(HEAL2), 1)]
+HEAL2[, P_bh := p.adjust(P, method = "BH")]
+#
+DME_1_MVP <- merge(DME_1_MVP, 
+                   DME_1[, .(Cell_type, Dataset, 
+                             BETA_DME_1 = BETA, SE_DME_1 = SE, P_DME_1 = P, 
+                             P_bon_DME_1 = P_bon, P_bh_DME_1 = P_bh)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
 
+DME_1_MVP <- merge(DME_1_MVP, 
+                   MVP[, .(Cell_type, Dataset, 
+                           BETA_MVP = BETA, SE_MVP = SE, P_MVP = P, 
+                           P_bon_MVP = P_bon, P_bh_MVP = P_bh)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
+
+DME_1_MVP <- merge(DME_1_MVP, 
+                   HEAL2[, .(Cell_type, Dataset, 
+                             P_HEAL2 = P, P_bon_HEAL2 = P_bon, P_bh_HEAL2 = P_bh, 
+                             GeneRatio, BgRatio, FoldEnrichment, genes)], 
+                   by = c("Cell_type", "Dataset"), all.x = TRUE)
+#
+DME_1_MVP<-subset.data.frame(DME_1_MVP,select=c("Dataset","Cell_type","BETA","SE",
+                                                "P","P_bon","P_bh",
+                                                "BETA_DME_1","SE_DME_1",
+                                                "P_DME_1","P_bon_DME_1","P_bh_DME_1",
+                                                "BETA_MVP","SE_MVP",
+                                                "P_MVP","P_bon_MVP","P_bh_MVP",
+                                                "P_HEAL2","P_bon_HEAL2","P_bh_HEAL2",
+                                                "GeneRatio", "BgRatio", "FoldEnrichment",
+                                                "genes"))
+DME_1_MVP<-DME_1_MVP[order(DME_1_MVP$P),]
+#
+# Add DropViz annotation
+# 
+DME_1_MVP<-Annot_DV(DME_1_MVP)
+#
+# Write a table with only significant results (BH)
+#
+step3<-fread("FUMA/DME_1_MVP/DropViz_L2_BH/step1_2_summary.txt")
+step3<-subset.data.frame(step3,step3==1)
+index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
+dt<-DME_1_MVP[index,]
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
+write.table(dt,"Table_DropViz_L2_BH.csv",sep=",",row.names=F,quote=T)
+#
+# Write a table with only significant results (Bonferroni + Step2)
+#
+step3<-fread("FUMA/DME_1_MVP/DropViz_L2/step1_2_summary.txt")
+step3<-subset.data.frame(step3,step3==1)
+index<-which(DME_1_MVP$Cell_type%in%step3$Cell_type&DME_1_MVP$Dataset%in%step3$Dataset)
+dt<-DME_1_MVP[index,]
+dt[, P_bon_rep_HEAL2 := pmin(P_HEAL2 * nrow(dt), 1)] 
+write.table(dt,"Table_DropViz_L2_Bon.csv",sep=",",row.names=F,quote=T)
+#
+# Load existing workbook
+#
+wb<-loadWorkbook(paste0(wb_name,".xlsx"))
+sheet_name<-"S6 DropViz L2 Analysis" # name the sheet
+myresult<-DME_1_MVP
+#
+addWorksheet(wb,sheet_name)
+writeData(wb,sheet_name,myresult)
+addFilter(wb,sheet_name,row=1,cols=1:ncol(myresult))
+addStyle(wb,sheet_name,
+         createStyle(textDecoration ="bold",border="Bottom"),
+         rows=1,cols=1:ncol(myresult))
+setColWidths(wb,sheet_name,cols=1:ncol(myresult),widths="auto")
+freezePane(wb,sheet_name,firstRow=T)
+saveWorkbook(wb,paste0(wb_name,".xlsx"),overwrite=T)

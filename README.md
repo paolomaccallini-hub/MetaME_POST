@@ -2,7 +2,7 @@
 
 **MetaME_POST** is the analysis pipeline accompanying the paper:
 
-> xxx
+Maccallini, P. (2026). Biological Insights from Genome-Wide Association Studies and Whole Genome Sequencing of Myalgic Encephalomyelitis/Chronic Fatigue Syndrome. Zenodo. https://doi.org/10.5281/zenodo.20204356
 
 This repository is self-contained and includes the full MetaME pipeline
 (`MetaME_main.R`, `MetaME_func.R`) configured for the DME-1 and MVP cohorts,
@@ -168,7 +168,7 @@ MIT License. See `LICENSE` for details.
 
 If you use this pipeline, please cite:
 
-> Maccallini P. xxx
+Maccallini, P. (2026). Biological Insights from Genome-Wide Association Studies and Whole Genome Sequencing of Myalgic Encephalomyelitis/Chronic Fatigue Syndrome. Zenodo. https://doi.org/10.5281/zenodo.20204356
 
 ---
 

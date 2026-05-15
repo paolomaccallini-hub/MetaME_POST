@@ -156,6 +156,8 @@ The pipeline produces:
 - `Replication/` — ORA replication results for gene sets, tissues, and cell types
 - `Supplementary_Tables.xlsx` — all supplementary tables for the paper
 
+The meta-analytic summary statistics are available for download in both GRCh37 and GRCh38 at the associated [ZENODO repository](https://doi.org/10.5281/zenodo.20204356).
+
 ---
 
 ## License

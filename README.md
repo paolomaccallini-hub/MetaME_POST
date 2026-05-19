@@ -171,7 +171,8 @@ MIT License. See `LICENSE` for details.
 
 If you use this pipeline, please cite:
 
-Maccallini, P. (2026). Biological Insights from Genome-Wide Association Studies and Whole Genome Sequencing of Myalgic Encephalomyelitis/Chronic Fatigue Syndrome. Zenodo. https://doi.org/10.5281/zenodo.20204356
+Paolo Maccallini. Biological Insights from Genome-Wide Association Studies and Whole Genome Sequencing of Myalgic
+Encephalomyelitis/Chronic Fatigue Syndrome, 15 May 2026, PREPRINT (Version 1) available at Research Square [https://doi.org/10.21203/rs.3.rs-9702020/v1]
 
 ---
 

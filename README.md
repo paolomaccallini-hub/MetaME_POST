@@ -142,7 +142,7 @@ where `E(g,c)` is the log2 transformed pseudocount of gene *g* in cell type *c* 
 
 ## Replication
 
-Zhang et al. (2025) candidate genes (115 genes, q < 0.02) were used as an independent replication set. Over-representation analysis (ORA) was performed using a one-sided hypergeometric test against the STRING network background (17,759 genes). Bonferroni correction for replication was applied using k equal to the number of discoveries in the meta-analysis that survived the primary correction threshold.
+Zhang et al. (2025) candidate genes (115 genes) were used as an independent replication set. Over-representation analysis (ORA) was performed using a one-sided hypergeometric test against the STRING network background (17,759 genes). Bonferroni correction for replication was applied using k equal to the number of discoveries in the meta-analysis that survived the primary correction threshold.
 
 > Zhang S. et al. *Dissecting the genetic complexity of myalgic encephalomyelitis/chronic fatigue syndrome via deep learning-powered genome analysis.* medRxiv 2025. doi:10.1101/2025.04.15.25325899
 

@@ -178,4 +178,4 @@ Encephalomyelitis/Chronic Fatigue Syndrome, 15 May 2026, PREPRINT (Version 1) av
 
 ## Acknowledgements
 
-This work is dedicated to the memory of Pierluigi Maccallini, whose intellectual guidance made this project possible.
+This work is dedicated to the memory of Pierluigi Maccallini.
